@@ -26,11 +26,11 @@ const Product = () => {
   }, [productId, products]);
 
   return productData ? (
-    <div className="border-t-2 pt-10 transition-opacity ease-in duration-500 opacity-100">
+    <div className="pt-10 transition-opacity duration-500 ease-in border-t-2 opacity-100">
       {/* Product data */}
-      <div className="flex gap-12 sm:gap-12 flex-col sm:flex-row">
+      <div className="flex flex-col gap-12 sm:gap-12 sm:flex-row">
         {/* product images */}
-        <div className="flex-1 flex flex-col-reverse gap-3 sm:flex-row">
+        <div className="flex flex-col-reverse flex-1 gap-3 sm:flex-row">
           <div className="flex sm:flex-col overflow-auto sm:overflow-y-scroll justify-between sm:justify-normal sm:w-[18.7%] w-full">
             {productData.image.map((item, index) => (
               <img
@@ -49,14 +49,14 @@ const Product = () => {
 
         {/* product info */}
         <div className="flex-1">
-          <h1 className="font-medium text-2xl mt-2">{productData.name}</h1>
+          <h1 className="mt-2 text-2xl font-medium">{productData.name}</h1>
           <div className="flex items-center gap-1 mt-2">
             <img src={assets.star_icon} alt="" className="w-3 5" />
             <img src={assets.star_icon} alt="" className="w-3 5" />
             <img src={assets.star_icon} alt="" className="w-3 5" />
             <img src={assets.star_icon} alt="" className="w-3 5" />
-            <img src={assets.star_dull_icon} alt="" className="w-3 5" />
-            <p className="pl-12">(122)</p>
+            <img src={assets.star_icon} alt="" className="w-3 5" />
+            {/* <p className="pl-12">(122)</p> */}
           </div>
           <p className="mt-5 text-3xl font-medium">{currency}{productData.price}</p>
           <p className="mt-5 text-gray-500 md:w-4/5">{productData.description}</p>
@@ -70,11 +70,11 @@ const Product = () => {
               }
             </div>
           </div>
-          <button onClick={() => addToCart(productData._id,size)} className="bg-black text-white px-8 py-3 text-sm active:bg-gray-700">
+          <button onClick={() => addToCart(productData._id,size)} className="px-8 py-3 text-sm text-white bg-black active:bg-gray-700">
             ADD TO CART
           </button>
           <hr className="mt-8 sm:w-4/5"/>
-          <div className="text-sm text-gray-500 mt-5 flex flex-col gap-1">
+          <div className="flex flex-col gap-1 mt-5 text-sm text-gray-500">
               <p>100% Quality Wig.</p>
               <p>Cash on delivery is available on this product.</p>
               <p>Easy return and exchange policy within 7 days.</p>
@@ -84,10 +84,10 @@ const Product = () => {
       {/* Description and review section */}
       <div className="mt-20">
           <div className="flex">
-            <b className="border px-5 py-3 text-sm">Description</b>
-            <p className="border px-5 py-3 text-sm">Reviews (122)</p>
+            <b className="px-5 py-3 text-sm border">Description</b>
+            {/* <p className="px-5 py-3 text-sm border">Reviews</p> */}
           </div>
-          <div className="flex flex-col gap-4 border px-6 text-sm text-gray-500">
+          <div className="flex flex-col gap-4 px-6 py-4 text-sm text-gray-500 border">
             <p>AJ Wigs are designed with precision and care, offering a natural and seamless look for any occasion. Combining comfort, style, and longevity, these wigs provide an effortless way to enhance your beauty and express your individuality.</p>
             <p>Each wig is crafted to cater to diverse preferences, ensuring you find the perfect match for your unique style and personality. Explore our collection and discover the ideal wig that complements your lifestyle.</p>
           </div>
