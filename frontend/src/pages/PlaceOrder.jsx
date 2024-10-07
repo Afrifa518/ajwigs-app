@@ -17,7 +17,7 @@ const PlaceOrder = () => {
     delivery_fee,
     products,
   } = useContext(ShopContext);
-  const [method, setMethod] = useState("cod");
+  const [method, setMethod] = useState("stripe");
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -179,7 +179,7 @@ const PlaceOrder = () => {
             value={formData.zipcode}
             className="border border-gray-300 rounded py-1.5 px-3.5 w-full"
             type="number"
-            placeholder="Zip code"
+            placeholder="Postal code"
           />
           <input
             required
@@ -223,7 +223,7 @@ const PlaceOrder = () => {
               ></p>
               <img className="h-5 mx-4" src={assets.stripe_logo} alt="" />
             </div>
-            <div
+            {/* <div
               onClick={() => setMethod("cod")}
               className="flex items-center gap-3 p-2 px-3 border cursor-pointer"
             >
@@ -235,7 +235,7 @@ const PlaceOrder = () => {
               <p className="mx-4 text-sm font-medium text-gray-500">
                 CASH ON DELIVERY
               </p>
-            </div>
+            </div> */}
           </div>
           <div className="w-full mt-8 text-end">
             <button
