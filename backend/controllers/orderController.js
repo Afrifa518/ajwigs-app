@@ -5,7 +5,7 @@ import Stripe from 'stripe'
 
 // global variables
 const currency = 'gbp'
-const deliveryCharge = 10
+const deliveryCharge = 2
 
 
 // gateway initialization
