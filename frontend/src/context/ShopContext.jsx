@@ -13,7 +13,7 @@ const ShopContextProvider = (props) => {
         currency: "GBP",
     });
       
-    const delivery_fee = 10;
+    const delivery_fee = 2;
     const backendUrl = import.meta.env.VITE_BACKEND_URL
     const [search, setSearch] = useState('')
     const [showSearch, setShowSearch] = useState(false)
