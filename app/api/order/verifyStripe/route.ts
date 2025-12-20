@@ -53,22 +53,6 @@ export async function POST(request: Request) {
 
     const admin = createSupabaseAdminClient();
 
-    if (success !== "true") {
-      const { error: deleteError } = await admin
-        .from("orders")
-        .delete()
-        .eq("id", orderId);
-
-      if (deleteError) {
-        throw new ApiError(500, deleteError.message);
-      }
-
-      return NextResponse.json({
-        success: false,
-        message: "Payment failed",
-      });
-    }
-
     if (!o.stripe_session_id) {
       throw new ApiError(400, "Missing stripe_session_id for order");
     }
@@ -94,7 +78,7 @@ export async function POST(request: Request) {
 
       return NextResponse.json({
         success: false,
-        message: "Payment not completed",
+        message: success === "true" ? "Payment not completed" : "Payment failed",
       });
     }
 
