@@ -1,0 +1,10 @@
+{
+  "/page": "app/page.js",
+  "/contact/page": "app/contact/page.js",
+  "/about/page": "app/about/page.js",
+  "/api/cart/get/route": "app/api/cart/get/route.js",
+  "/product/[productId]/page": "app/product/[productId]/page.js",
+  "/cart/page": "app/cart/page.js",
+  "/place-order/page": "app/place-order/page.js",
+  "/api/order/stripe/route": "app/api/order/stripe/route.js"
+}

@@ -1,0 +1,1 @@
+{"version":1,"functions":{"/api/order/list":{},"/api/order/place":{},"/api/order/status":{},"/api/order/stripe":{},"/api/order/userorders":{},"/api/order/verifyStripe":{},"/api/product/add":{},"/verify":{}}}

@@ -1,0 +1,43 @@
+import Image from "next/image";
+import { assets } from "@/app/storefront/assets";
+
+export default function StorefrontFooter() {
+  return (
+    <div>
+      <div className="flex flex-col sm:grid grid-cols-[3fr_1fr_1fr] gap-14 my-10 mt-40 text-sm">
+        <div>
+          <Image src={assets.logo} className="mb-5 w-32" alt="" />
+          <p className="w-full md:w-2/3 text-gray-600">
+            At House of AJ Wigs, we believe in empowering everyone to feel confident and
+            beautiful. Our high-quality wigs offer a perfect blend of comfort and style,
+            allowing you to express your unique personality with ease. Let us help you find
+            the look that makes you shine.
+          </p>
+        </div>
+        <div>
+          <p className="text-xl font-medium mb-5">HOUSE OF AJ WIGS</p>
+          <ul className="flex flex-col gap-1 text-gray-600">
+            <li>Home</li>
+            <li>About us</li>
+            <li>Delivery</li>
+            <li>Privacy Policy</li>
+          </ul>
+        </div>
+        <div>
+          <p className="text-xl font-medium mb-5">GET IN TORCH</p>
+          <ul className="flex flex-col gap-1 text-gray-600">
+            <li>+44 7960 609298</li>
+            <li>houseofajwigs@gmail.com</li>
+          </ul>
+        </div>
+      </div>
+
+      <div>
+        <hr />
+        <p className="py-5 text-sm text-center">
+          Copyright © {new Date().getFullYear()} HouseOfAJWigs - All rights reserved.
+        </p>
+      </div>
+    </div>
+  );
+}
