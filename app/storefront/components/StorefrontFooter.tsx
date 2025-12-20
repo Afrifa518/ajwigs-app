@@ -8,14 +8,14 @@ export default function StorefrontFooter() {
         <div>
           <Image src={assets.logo} className="mb-5 w-32" alt="" />
           <p className="w-full md:w-2/3 text-gray-600">
-            At House of AJ Wigs, we believe in empowering everyone to feel confident and
+            At El-ROI LUX HAIRS LTD, we believe in empowering everyone to feel confident and
             beautiful. Our high-quality wigs offer a perfect blend of comfort and style,
             allowing you to express your unique personality with ease. Let us help you find
             the look that makes you shine.
           </p>
         </div>
         <div>
-          <p className="text-xl font-medium mb-5">HOUSE OF AJ WIGS</p>
+          <p className="text-xl font-medium mb-5">EL-ROI LUX HAIRS LTD</p>
           <ul className="flex flex-col gap-1 text-gray-600">
             <li>Home</li>
             <li>About us</li>
@@ -35,7 +35,7 @@ export default function StorefrontFooter() {
       <div>
         <hr />
         <p className="py-5 text-sm text-center">
-          Copyright © {new Date().getFullYear()} HouseOfAJWigs - All rights reserved.
+          Copyright © {new Date().getFullYear()} El-ROI LUX HAIRS LTD - All rights reserved.
         </p>
       </div>
     </div>

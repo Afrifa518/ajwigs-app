@@ -63,7 +63,7 @@ export default function StorefrontNavbar() {
   return (
     <div className="flex items-center justify-between py-5 font-medium">
       <Link href="/">
-        <Image src={assets.logo} className="w-36" alt="HouseofAJ" />
+        <Image src={assets.logo} className="w-36" alt="El-ROI LUX HAIRS LTD" />
       </Link>
 
       <ul className="hidden gap-5 text-sm text-gray-700 sm:flex">

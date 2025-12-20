@@ -17,14 +17,14 @@ const About = () => {
         />
         <div className="flex flex-col justify-center gap-6 md:w-2/4 text-gray-600">
           <p>
-            House of AJ Wigs was founded by Adwoa Afrifa in 2021 with a vision
+            El-ROI LUX HAIRS LTD was founded by Adwoa Afrifa in 2021 with a vision
             to bring high-quality, fashionable wigs to individuals seeking
             beauty, confidence, and self-expression. Based in the UK, our brand
             is built on the principles of craftsmanship, style, and
             authenticity.
           </p>
           <p>
-            At House of AJ Wigs, we believe that a wig is more than just a
+            At El-ROI LUX HAIRS LTD, we believe that a wig is more than just a
             hairstyle—it's a way to express who you are. Our carefully curated
             collection offers something for every taste, ensuring that each
             customer feels unique and empowered. From our beginning, we have
@@ -49,7 +49,7 @@ const About = () => {
       <div className="flex flex-col md:flex-row text-sm mb-20">
         <div className="border px-10 md:px-16 py-8 sm:py-20 flex flex-col gap-5">
           <b>Quality Assurance</b>
-          <p className="text-gray-600">At House of AJ Wigs, quality is our top priority. Every wig is meticulously crafted using premium materials to ensure a natural look, durability, and ultimate comfort. We take pride in delivering products that meet the highest standards, so you can wear your wig with confidence.</p>
+          <p className="text-gray-600">At El-ROI LUX HAIRS LTD, quality is our top priority. Every wig is meticulously crafted using premium materials to ensure a natural look, durability, and ultimate comfort. We take pride in delivering products that meet the highest standards, so you can wear your wig with confidence.</p>
         </div>
         <div className="border px-10 md:px-16 py-8 sm:py-20 flex flex-col gap-5">
           <b>Convenience</b>

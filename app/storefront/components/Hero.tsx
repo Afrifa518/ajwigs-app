@@ -12,7 +12,7 @@ export default function Hero() {
           <div className="hero-enter inline-flex items-center gap-3">
             <span className="h-px w-10 bg-[#C8A951]/80" />
             <p className="text-xs font-semibold tracking-[0.22em] text-gray-600">
-              HOUSE OF AJ
+              EL-ROI LUX HAIRS LTD
             </p>
           </div>
 
@@ -63,7 +63,7 @@ export default function Hero() {
         <Image
           className="hero-float w-full"
           src={assets.hero_img}
-          alt="House of AJ Wigs"
+          alt="El-ROI LUX HAIRS LTD"
           priority
         />
 

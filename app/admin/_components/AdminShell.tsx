@@ -150,7 +150,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
           <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-fuchsia-500 via-violet-500 to-sky-500" />
           <div>
             <p className="text-sm text-slate-400">Admin Console</p>
-            <p className="text-base font-semibold tracking-tight">House of AJ Wigs</p>
+            <p className="text-base font-semibold tracking-tight">El-ROI LUX HAIRS LTD</p>
           </div>
         </div>
 

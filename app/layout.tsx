@@ -6,6 +6,8 @@ import StorefrontFrame from "@/app/storefront/StorefrontFrame";
 import logo from "@/frontend/src/assets/logo.png";
 
 export const metadata: Metadata = {
+  title: "El-ROI LUX HAIRS LTD",
+  description: "El-ROI LUX HAIRS LTD — premium wigs and luxury hair.",
   icons: {
     icon: logo.src,
     apple: logo.src,
