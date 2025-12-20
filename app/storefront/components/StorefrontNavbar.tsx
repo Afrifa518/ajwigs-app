@@ -3,16 +3,51 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useShop } from "@/app/providers";
 import { assets } from "@/app/storefront/assets";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 export default function StorefrontNavbar() {
   const router = useRouter();
   const pathname = usePathname();
   const [visible, setVisible] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const { setShowSearch, getCartCount, token, signOut } = useShop();
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const run = async () => {
+      if (!token) {
+        setIsAdmin(false);
+        return;
+      }
+
+      const supabase = createSupabaseBrowserClient();
+      const { data } = await supabase.auth.getUser();
+      const userId = data.user?.id ?? null;
+      if (!userId) {
+        setIsAdmin(false);
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (cancelled) return;
+      setIsAdmin(profile?.role === "admin");
+    };
+
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
 
   const logout = async () => {
     await signOut();
@@ -52,6 +87,12 @@ export default function StorefrontNavbar() {
           <p>CONTACT</p>
           <hr className="w-2/4 border-none h-[1.5px] bg-gray-700 hidden" />
         </Link>
+        {token && isAdmin ? (
+          <Link href="/admin" className={navLinkClass("/admin")}>
+            <p>ADMIN DASHBOARD</p>
+            <hr className="w-2/4 border-none h-[1.5px] bg-gray-700 hidden" />
+          </Link>
+        ) : null}
       </ul>
 
       <div className="flex items-center gap-6">
@@ -90,6 +131,15 @@ export default function StorefrontNavbar() {
             {getCartCount()}
           </p>
         </Link>
+        {token ? (
+          <button
+            type="button"
+            onClick={() => void logout()}
+            className="inline-flex rounded-full border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 sm:px-3"
+          >
+            Logout
+          </button>
+        ) : null}
         <Image
           onClick={() => setVisible(true)}
           src={assets.menu_icon}
@@ -139,6 +189,27 @@ export default function StorefrontNavbar() {
           >
             CONTACT
           </Link>
+          {token && isAdmin ? (
+            <Link
+              onClick={() => setVisible(false)}
+              className="py-2 pl-6 border"
+              href="/admin"
+            >
+              ADMIN DASHBOARD
+            </Link>
+          ) : null}
+          {token ? (
+            <button
+              type="button"
+              onClick={() => {
+                setVisible(false);
+                void logout();
+              }}
+              className="py-2 pl-6 border text-left"
+            >
+              LOGOUT
+            </button>
+          ) : null}
         </div>
       </div>
     </div>
