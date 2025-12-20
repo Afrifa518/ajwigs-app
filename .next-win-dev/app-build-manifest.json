@@ -40,6 +40,11 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/place-order/page.js"
+    ],
+    "/verify/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/verify/page.js"
     ]
   }
 }
