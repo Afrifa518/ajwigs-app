@@ -337,7 +337,52 @@ export default function AdminHomePage() {
               </Link>
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="sm:hidden">
+              <div className="divide-y divide-slate-800">
+                {recentOrders.map((o) => (
+                  <div key={o._id} className="px-5 py-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-slate-100">{o._id}</p>
+                        <p className="mt-0.5 text-xs text-slate-500">
+                          {new Date(o.date).toLocaleString()} · {o.items.length} items
+                        </p>
+                      </div>
+                      <p className="text-sm text-slate-200">{formatMoney(o.amount)}</p>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <span
+                        className={
+                          "inline-flex items-center rounded-full border px-2.5 py-1 text-xs " +
+                          (o.payment
+                            ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-200"
+                            : "border-slate-700 bg-slate-900/40 text-slate-300")
+                        }
+                      >
+                        {o.payment ? "Paid" : "Unpaid"} · {o.paymentMethod}
+                      </span>
+                      <span
+                        className={
+                          "inline-flex items-center rounded-full border px-2.5 py-1 text-xs " +
+                          statusPillClass(o.status)
+                        }
+                      >
+                        {o.status}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+
+                {recentOrders.length === 0 ? (
+                  <div className="px-5 py-6">
+                    <p className="text-sm text-slate-400">No orders found.</p>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="hidden overflow-x-auto sm:block">
               <table className="min-w-[720px] w-full text-sm">
                 <thead className="text-xs text-slate-400">
                   <tr>
