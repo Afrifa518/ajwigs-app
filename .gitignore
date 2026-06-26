@@ -12,3 +12,4 @@ out
 .vercel
 *.tsbuildinfo
 .claude/
+scripts/_garments/
