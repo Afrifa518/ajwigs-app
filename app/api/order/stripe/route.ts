@@ -4,20 +4,10 @@ import { getUserOrThrow } from "@/lib/auth/guards";
 import { createSupabaseRouteHandlerClient } from "@/lib/supabase/route-handler";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getStripe } from "@/lib/stripe";
-
-type IncomingOrderItem = {
-  _id?: string;
-  id?: string;
-  name?: string;
-  price?: number;
-  quantity?: number;
-  color?: string;
-  size?: string;
-  image?: string[];
-};
+import { assertValidAddress, resolveOrderItems } from "@/lib/orders/pricing";
 
 const currency = "gbp";
-const deliveryCharge = 2;
+const deliveryChargePence = 200;
 
 export const runtime = "nodejs";
 
@@ -28,18 +18,16 @@ export async function POST(request: Request) {
     const user = await getUserOrThrow(supabase);
 
     const body = (await request.json()) as {
-      items?: IncomingOrderItem[];
-      amount?: number;
+      items?: unknown;
       address?: unknown;
     };
 
-    const items = body.items;
-    const amount = body.amount;
-    const address = body.address;
+    const address = assertValidAddress(body.address);
 
-    if (!Array.isArray(items) || typeof amount !== "number" || !address) {
-      throw new ApiError(400, "Invalid order payload");
-    }
+    // Prices/totals are derived server-side from the database; client prices
+    // are never trusted (otherwise a tampered request could pay any amount).
+    const { items, subtotalPence } = await resolveOrderItems(supabase, body.items);
+    const amountPence = subtotalPence + deliveryChargePence;
 
     const originHeader = request.headers.get("origin");
     const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
@@ -49,8 +37,6 @@ export async function POST(request: Request) {
     if (!origin) {
       throw new ApiError(400, "Missing origin/host header");
     }
-
-    const amountPence = Math.round(amount * 100);
 
     const { data: order, error: orderError } = await supabase
       .from("orders")
@@ -70,56 +56,30 @@ export async function POST(request: Request) {
       throw new ApiError(500, orderError?.message ?? "Failed to create order");
     }
 
-    const orderItems = items
-      .filter((i) => i && typeof i.name === "string" && typeof i.price === "number")
-      .map((i) => ({
-        order_id: order.id,
-        product_id: (i._id ?? i.id) || null,
-        name: i.name as string,
-        price_pence: Math.round((i.price as number) * 100),
-        quantity: typeof i.quantity === "number" ? i.quantity : 1,
-        color:
-          typeof i.color === "string" && i.color.trim()
-            ? (i.color as string)
-            : null,
-        size:
-          typeof i.size === "string" && i.size.trim() ? (i.size as string) : null,
-        image_url:
-          Array.isArray(i.image) && typeof i.image[0] === "string"
-            ? i.image[0]
-            : null,
-      }));
+    const orderItems = items.map((i) => ({ ...i, order_id: order.id }));
 
-    if (orderItems.length) {
-      const { error: itemsError } = await supabase
-        .from("order_items")
-        .insert(orderItems);
+    const { error: itemsError } = await supabase
+      .from("order_items")
+      .insert(orderItems);
 
-      if (itemsError) {
-        throw new ApiError(500, itemsError.message);
-      }
+    if (itemsError) {
+      throw new ApiError(500, itemsError.message);
     }
 
-    const line_items = items
-      .filter((i) => i && typeof i.name === "string" && typeof i.price === "number")
-      .map((item) => ({
-        price_data: {
-          currency,
-          product_data: {
-            name: item.name as string,
-          },
-          unit_amount: Math.round((item.price as number) * 100),
-        },
-        quantity: typeof item.quantity === "number" ? item.quantity : 1,
-      }));
+    const line_items = items.map((item) => ({
+      price_data: {
+        currency,
+        product_data: { name: item.name },
+        unit_amount: item.price_pence,
+      },
+      quantity: item.quantity,
+    }));
 
     line_items.push({
       price_data: {
         currency,
-        product_data: {
-          name: "Delivery Charges",
-        },
-        unit_amount: deliveryCharge * 100,
+        product_data: { name: "Delivery Charges" },
+        unit_amount: deliveryChargePence,
       },
       quantity: 1,
     });

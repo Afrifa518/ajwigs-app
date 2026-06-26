@@ -6,6 +6,8 @@ import { assertAdminOrThrow, getUserOrThrow } from "@/lib/auth/guards";
 
 export const runtime = "nodejs";
 
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB per image
+
 type ProductInsert = {
   name: string;
   description: string;
@@ -95,16 +97,25 @@ export async function POST(request: Request) {
       const file = entry as File;
       if (!file.size) continue;
 
+      if (!file.type.startsWith("image/")) {
+        throw new ApiError(400, "Only image files can be uploaded");
+      }
+      if (file.size > MAX_IMAGE_BYTES) {
+        throw new ApiError(400, "Each image must be 5 MB or smaller");
+      }
+
       const bytes = await file.arrayBuffer();
       const blob = new Blob([bytes], {
-        type: file.type || "application/octet-stream",
+        type: file.type,
       });
-      const objectPath = `${user.id}/${crypto.randomUUID()}-${file.name}`;
+      // Use a safe, random object name — don't trust the client filename.
+      const safeExt = (file.name.split(".").pop() ?? "").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 5);
+      const objectPath = `${user.id}/${crypto.randomUUID()}${safeExt ? "." + safeExt : ""}`;
 
       const { error: uploadError } = await supabase.storage
         .from("product-images")
         .upload(objectPath, blob, {
-          contentType: file.type || "application/octet-stream",
+          contentType: file.type,
           upsert: false,
         });
 

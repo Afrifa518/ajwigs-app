@@ -5,6 +5,15 @@ import { createSupabaseRouteHandlerClient } from "@/lib/supabase/route-handler";
 
 export const runtime = "nodejs";
 
+const ALLOWED_STATUSES = [
+  "Order Placed",
+  "Packing",
+  "Shipped",
+  "Out for delivery",
+  "Delivered",
+  "Cancelled",
+];
+
 export async function POST(request: Request) {
   const supabase = createSupabaseRouteHandlerClient();
 
@@ -18,6 +27,10 @@ export async function POST(request: Request) {
 
     if (!orderId || !status) {
       throw new ApiError(400, "Missing orderId or status");
+    }
+
+    if (!ALLOWED_STATUSES.includes(status)) {
+      throw new ApiError(400, "Invalid order status");
     }
 
     const { error } = await supabase

@@ -2,17 +2,7 @@ import { NextResponse } from "next/server";
 import { ApiError, isApiError } from "@/lib/api-error";
 import { getUserOrThrow } from "@/lib/auth/guards";
 import { createSupabaseRouteHandlerClient } from "@/lib/supabase/route-handler";
-
-type IncomingOrderItem = {
-  _id?: string;
-  id?: string;
-  name?: string;
-  price?: number;
-  quantity?: number;
-  color?: string;
-  size?: string;
-  image?: string[];
-};
+import { assertValidAddress, resolveOrderItems } from "@/lib/orders/pricing";
 
 export const runtime = "nodejs";
 
@@ -23,26 +13,21 @@ export async function POST(request: Request) {
     const user = await getUserOrThrow(supabase);
 
     const body = (await request.json()) as {
-      items?: IncomingOrderItem[];
-      amount?: number;
+      items?: unknown;
       address?: unknown;
     };
 
-    const items = body.items;
-    const amount = body.amount;
-    const address = body.address;
+    const address = assertValidAddress(body.address);
 
-    if (!Array.isArray(items) || typeof amount !== "number" || !address) {
-      throw new ApiError(400, "Invalid order payload");
-    }
-
-    const amountPence = Math.round(amount * 100);
+    // Prices and totals are computed server-side from the database — the
+    // client-supplied amount/prices are ignored.
+    const { items, subtotalPence } = await resolveOrderItems(supabase, body.items);
 
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .insert({
         user_id: user.id,
-        amount_pence: amountPence,
+        amount_pence: subtotalPence,
         currency: "GBP",
         status: "Order Placed",
         payment_method: "COD",
@@ -56,34 +41,14 @@ export async function POST(request: Request) {
       throw new ApiError(500, orderError?.message ?? "Failed to create order");
     }
 
-    const orderItems = items
-      .filter((i) => i && typeof i.name === "string" && typeof i.price === "number")
-      .map((i) => ({
-        order_id: order.id,
-        product_id: (i._id ?? i.id) || null,
-        name: i.name as string,
-        price_pence: Math.round((i.price as number) * 100),
-        quantity: typeof i.quantity === "number" ? i.quantity : 1,
-        color:
-          typeof i.color === "string" && i.color.trim()
-            ? (i.color as string)
-            : null,
-        size:
-          typeof i.size === "string" && i.size.trim() ? (i.size as string) : null,
-        image_url:
-          Array.isArray(i.image) && typeof i.image[0] === "string"
-            ? i.image[0]
-            : null,
-      }));
+    const orderItems = items.map((i) => ({ ...i, order_id: order.id }));
 
-    if (orderItems.length) {
-      const { error: itemsError } = await supabase
-        .from("order_items")
-        .insert(orderItems);
+    const { error: itemsError } = await supabase
+      .from("order_items")
+      .insert(orderItems);
 
-      if (itemsError) {
-        throw new ApiError(500, itemsError.message);
-      }
+    if (itemsError) {
+      throw new ApiError(500, itemsError.message);
     }
 
     const { error: clearCartError } = await supabase
