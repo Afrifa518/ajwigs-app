@@ -77,7 +77,7 @@ export default function StorefrontNavbar() {
       <header className="sticky top-0 z-40 w-screen ml-[calc(50%-50vw)] border-b border-[#1c1714]/10 bg-[#F6F2EA]/80 backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between gap-4 px-4 sm:h-16 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]">
         <Link href="/" aria-label="El-Roi Lux Hairs — home" className="shrink-0 text-[#1c1714]">
-          <Logo markClassName="h-9 w-9 sm:h-10 sm:w-10" />
+          <Logo markClassName="h-11 w-11 sm:h-12 sm:w-12" />
         </Link>
 
         {/* Desktop nav */}

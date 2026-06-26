@@ -34,8 +34,8 @@ export default function Logo({
       />
       {withName ? (
         <span className="flex flex-col leading-none">
-          <span className="font-serif text-[17px] leading-none tracking-tight">El-Roi</span>
-          <span className="mt-1 text-[9px] font-medium uppercase tracking-[0.34em] opacity-80">
+          <span className="font-serif text-[19px] leading-none tracking-tight">El-Roi</span>
+          <span className="mt-1 text-[10px] font-medium uppercase tracking-[0.34em] opacity-80">
             Lux Hairs
           </span>
         </span>
