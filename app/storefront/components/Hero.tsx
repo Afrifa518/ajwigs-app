@@ -16,7 +16,7 @@ export default function Hero() {
           <div className="hero-enter inline-flex items-center gap-3">
             <span className="h-px w-10 bg-[#C8A951]" />
             <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[#6b5a32]">
-              Premium Ghanaian Hair House
+              Premium UK Hair House
             </p>
           </div>
 
@@ -53,7 +53,7 @@ export default function Hero() {
           <dl className="hero-enter hero-enter-delay-3 mt-10 flex flex-wrap gap-x-10 gap-y-4 border-t border-[#1c1714]/10 pt-7 text-[#4b4339]">
             {[
               ["100%", "Human hair"],
-              ["24h", "Accra dispatch"],
+              ["24h", "UK dispatch"],
               ["5.0★", "Client rated"],
             ].map(([k, v]) => (
               <div key={v} className="flex flex-col">

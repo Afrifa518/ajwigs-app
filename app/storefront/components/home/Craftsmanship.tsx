@@ -41,12 +41,12 @@ export default function Craftsmanship() {
           </MotionReveal>
 
           <MotionReveal delay={120}>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#C8A951]">The craft · made in Ghana</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#C8A951]">The craft · finished in the UK</p>
             <h2 className="prata-regular mt-4 text-[clamp(2rem,4.5vw,3.4rem)] leading-[1.08] tracking-[-0.01em] text-[#F6F2EA]" style={{ textWrap: "balance" }}>
               Luxury is in the lace.
             </h2>
             <p className="mt-5 max-w-lg text-[15px] leading-relaxed text-[#cfc3ac] sm:text-base">
-              Every unit is finished by hand in Accra — plucked, bleached and shaped
+              Every unit is finished by hand in the UK — plucked, bleached and shaped
               until it disappears into you. This is the difference you feel the moment
               it&apos;s on.
             </p>

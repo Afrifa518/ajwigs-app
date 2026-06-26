@@ -7,25 +7,25 @@ const VOICES = [
     quote:
       "Nobody believes it's a wig. The lace just disappears — I've stopped explaining and started enjoying the compliments.",
     name: "Ama",
-    place: "East Legon, Accra",
+    place: "London",
   },
   {
     quote:
       "Ordered on WhatsApp in the evening, wore it to a wedding two days later. Secure all night, zero adjusting.",
     name: "Akosua",
-    place: "Kumasi",
+    place: "Manchester",
   },
   {
     quote:
       "Soft, full, and still beautiful months later. It actually feels like a luxury you keep, not a one-time look.",
     name: "Adwoa",
-    place: "Tema",
+    place: "Birmingham",
   },
 ];
 
 const SIGNALS = [
   { k: "Order on WhatsApp", v: "Real people, quick replies" },
-  { k: "24-hour dispatch", v: "From Accra, nationwide" },
+  { k: "24-hour dispatch", v: "From the UK, nationwide" },
   { k: "Pay on delivery", v: "Or secure card checkout" },
   { k: "Easy 7-day returns", v: "Shop with confidence" },
 ];

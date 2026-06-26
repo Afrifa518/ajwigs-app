@@ -109,18 +109,21 @@ async function lockup(name, rgb, { bg = null, sub = "" } = {}) {
   await base.composite(layers).png().toFile(path.join(OUT, `lockup-${name}.png`));
 }
 
-// Social card: centred mark + name on a brand background (no tagline).
+// Social card: centred mark + name + tagline on a brand background.
 async function socialCard(name, markRgb, textRgb, bg) {
   const W = 1600, H = 900;
-  const markH = 330;
+  const markH = 310;
   const mark = await sharp(await coloredMark(markRgb)).resize({ height: markH }).png().toBuffer();
-  const t1 = await textPng("El-Roi Lux Hairs", 142, textRgb);
-  const blockH = markH + 58 + t1.h;
+  const t1 = await textPng("El-Roi Lux Hairs", 138, textRgb);
+  const sub = await textPng("PREMIUM UK HAIR HOUSE", 40, markRgb);
+  const gap1 = 54, gap2 = 30;
+  const blockH = markH + gap1 + t1.h + gap2 + sub.h;
   const top = Math.round((H - blockH) / 2);
   const mm = await sharp(mark).metadata();
   const layers = [
     { input: mark, left: Math.round((W - mm.width) / 2), top },
-    { input: t1.buf, left: Math.round((W - t1.w) / 2), top: top + markH + 58 },
+    { input: t1.buf, left: Math.round((W - t1.w) / 2), top: top + markH + gap1 },
+    { input: sub.buf, left: Math.round((W - sub.w) / 2), top: top + markH + gap1 + t1.h + gap2 },
   ];
   await sharp({ create: { width: W, height: H, channels: 4, background: bg } })
     .composite(layers)
