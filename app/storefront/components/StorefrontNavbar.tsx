@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useShop } from "@/app/providers";
 import { assets } from "@/app/storefront/assets";
+import Logo from "@/app/storefront/components/Logo";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 const NAV_LINKS = [
@@ -75,8 +76,8 @@ export default function StorefrontNavbar() {
     <>
       <header className="sticky top-0 z-40 w-screen ml-[calc(50%-50vw)] border-b border-[#1c1714]/10 bg-[#F6F2EA]/80 backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between gap-4 px-4 sm:h-16 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]">
-        <Link href="/" aria-label="El-ROI Lux Hairs — home" className="shrink-0">
-          <Image src={assets.logo} className="h-9 w-auto sm:h-10" alt="El-ROI Lux Hairs" />
+        <Link href="/" aria-label="El-Roi Lux Hairs — home" className="shrink-0 text-[#1c1714]">
+          <Logo markClassName="h-9 w-9 sm:h-10 sm:w-10" />
         </Link>
 
         {/* Desktop nav */}
@@ -176,7 +177,7 @@ export default function StorefrontNavbar() {
           }
         >
           <div className="flex items-center justify-between border-b border-[#1c1714]/10 px-5 py-4">
-            <Image src={assets.logo} className="h-9 w-auto" alt="El-ROI Lux Hairs" />
+            <Logo markClassName="h-9 w-9" className="text-[#1c1714]" />
             <button
               type="button"
               onClick={() => setDrawer(false)}

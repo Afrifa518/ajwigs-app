@@ -1,12 +1,11 @@
-import Image from "next/image";
-import { assets } from "@/app/storefront/assets";
+import Logo from "@/app/storefront/components/Logo";
 
 export default function StorefrontFooter() {
   return (
     <div>
       <div className="flex flex-col sm:grid grid-cols-[3fr_1fr_1fr] gap-14 my-10 mt-40 text-sm">
         <div>
-          <Image src={assets.logo} className="mb-5 w-32" alt="" />
+          <Logo markClassName="h-12 w-12" className="mb-5 text-[#1c1714]" />
           <p className="w-full md:w-2/3 text-gray-600">
             At El-ROI LUX HAIRS LTD, we believe in empowering everyone to feel confident and
             beautiful. Our high-quality wigs offer a perfect blend of comfort and style,
@@ -24,7 +23,7 @@ export default function StorefrontFooter() {
           </ul>
         </div>
         <div>
-          <p className="text-xl font-medium mb-5">GET IN TORCH</p>
+          <p className="text-xl font-medium mb-5">GET IN TOUCH</p>
           <ul className="flex flex-col gap-1 text-gray-600">
             <li>+44 7960 609298</li>
             <li>houseofajwigs@gmail.com</li>

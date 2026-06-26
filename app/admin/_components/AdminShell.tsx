@@ -1,12 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { getUserEmail, signOut } from "@/app/admin/_lib/supabase";
-import logo from "@/frontend/src/assets/logo.png";
+import Logo from "@/app/storefront/components/Logo";
 
 type NavItem = {
   href: string;
@@ -107,8 +106,8 @@ const getPageTitle = (pathname: string) => {
 
 const Wordmark = () => (
   <div className="flex min-w-0 items-center gap-3">
-    <span className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-line2 bg-raised">
-      <Image src={logo} alt="El-ROI Lux Hairs" width={40} height={40} className="h-full w-full object-cover" />
+    <span className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-line2 bg-gold/12 text-gold">
+      <Logo withName={false} markClassName="h-7 w-7" />
     </span>
     <span className="min-w-0">
       <span className="block truncate font-serif text-base leading-tight text-ink">El-ROI Lux Hairs</span>
