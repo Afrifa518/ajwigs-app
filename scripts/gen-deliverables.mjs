@@ -39,24 +39,24 @@ async function coloredMark([r, g, b]) {
   return sharp(colored).trim().png().toBuffer();
 }
 
-// Render a line of Prata text to a tight transparent PNG (advance-width based,
-// so long strings never clip), then trim for accurate composition.
+// Render a line of Prata text to a tight transparent PNG. One <path> per glyph
+// (so librsvg never truncates a long combined path) at high precision (so the
+// rounding self-intersection that nibbled the "r" disappears). Rendered large
+// for crisp strokes, with explicit density so sharp doesn't down-raster it.
 async function textPng(text, size, [r, g, b]) {
   const scale = size / font.unitsPerEm;
   const ascent = font.ascender * scale;
   const descent = font.descender * scale; // negative
-  const pad = Math.round(size * 0.2);
+  const pad = Math.round(size * 0.15);
   const baseline = ascent + pad;
   const w = Math.ceil(font.getAdvanceWidth(text, size)) + pad * 2;
   const h = Math.ceil(ascent - descent) + pad * 2;
-  // One <path> per glyph — a single combined path of this length gets
-  // truncated by librsvg, dropping the last few letters.
   const glyphs = font.getPaths(text, pad, baseline, size);
   const els = glyphs
-    .map((p) => `<path d="${p.toPathData(2)}" fill="rgb(${r},${g},${b})"/>`)
+    .map((p) => `<path d="${p.toPathData(4)}" fill="rgb(${r},${g},${b})" fill-rule="nonzero"/>`)
     .join("");
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${els}</svg>`;
-  const buf = await sharp(Buffer.from(svg)).trim().png().toBuffer();
+  const buf = await sharp(Buffer.from(svg), { density: 96 }).trim().png().toBuffer();
   const m = await sharp(buf).metadata();
   return { buf, w: m.width, h: m.height };
 }
@@ -109,20 +109,18 @@ async function lockup(name, rgb, { bg = null, sub = "" } = {}) {
   await base.composite(layers).png().toFile(path.join(OUT, `lockup-${name}.png`));
 }
 
-// Social card: centred lockup on a brand background.
+// Social card: centred mark + name on a brand background (no tagline).
 async function socialCard(name, markRgb, textRgb, bg) {
   const W = 1600, H = 900;
-  const markH = 300;
+  const markH = 330;
   const mark = await sharp(await coloredMark(markRgb)).resize({ height: markH }).png().toBuffer();
-  const t1 = await textPng("El-Roi Lux Hairs", 130, textRgb);
-  const sub = await textPng("PREMIUM GHANAIAN HAIR HOUSE", 34, markRgb);
-  const blockH = markH + 50 + t1.h + 28 + sub.h;
-  let top = Math.round((H - blockH) / 2);
+  const t1 = await textPng("El-Roi Lux Hairs", 142, textRgb);
+  const blockH = markH + 58 + t1.h;
+  const top = Math.round((H - blockH) / 2);
   const mm = await sharp(mark).metadata();
   const layers = [
     { input: mark, left: Math.round((W - mm.width) / 2), top },
-    { input: t1.buf, left: Math.round((W - t1.w) / 2), top: top + markH + 50 },
-    { input: sub.buf, left: Math.round((W - sub.w) / 2), top: top + markH + 50 + t1.h + 28 },
+    { input: t1.buf, left: Math.round((W - t1.w) / 2), top: top + markH + 58 },
   ];
   await sharp({ create: { width: W, height: H, channels: 4, background: bg } })
     .composite(layers)
