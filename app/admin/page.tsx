@@ -64,6 +64,14 @@ const formatMoney = (amount: number) =>
     maximumFractionDigits: 2,
   }).format(amount);
 
+const formatCompactMoney = (amount: number) =>
+  new Intl.NumberFormat("en-GB", {
+    style: "currency",
+    currency: "GBP",
+    notation: amount >= 10000 ? "compact" : "standard",
+    maximumFractionDigits: amount >= 10000 ? 1 : 2,
+  }).format(amount);
+
 const dayKey = (ts: number) => {
   const d = new Date(ts);
   const yyyy = d.getFullYear();
@@ -76,59 +84,83 @@ const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(ma
 
 const statusPillClass = (status: string) => {
   const s = status.toLowerCase();
-  if (s.includes("delivered")) return "border-emerald-500/30 bg-emerald-500/10 text-emerald-200";
-  if (s.includes("out")) return "border-sky-500/30 bg-sky-500/10 text-sky-200";
-  if (s.includes("shipped")) return "border-indigo-500/30 bg-indigo-500/10 text-indigo-200";
-  if (s.includes("packing")) return "border-amber-500/30 bg-amber-500/10 text-amber-200";
-  return "border-slate-600/40 bg-slate-900/40 text-slate-200";
+  if (s.includes("delivered")) return "border-success/30 bg-success/12 text-success";
+  if (s.includes("out")) return "border-info/30 bg-info/12 text-info";
+  if (s.includes("shipped")) return "border-indigoish/30 bg-indigoish/12 text-indigoish";
+  if (s.includes("packing")) return "border-warning/30 bg-warning/12 text-warning";
+  if (s.includes("cancel")) return "border-danger/30 bg-danger/12 text-danger";
+  return "border-line2 bg-raised text-muted";
 };
 
-function Sparkline({ values }: { values: number[] }) {
-  const width = 220;
-  const height = 64;
-  const padX = 10;
-  const padY = 10;
+function AreaChart({ values }: { values: number[] }) {
+  const width = 600;
+  const height = 150;
+  const padX = 4;
+  const padY = 12;
 
-  const points = useMemo(() => {
-    if (values.length === 0) return [] as Array<{ x: number; y: number }>;
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-    const span = max - min || 1;
-
-    return values.map((v, i) => {
+  const { line, area, last, max } = useMemo(() => {
+    if (values.length === 0) return { line: "", area: "", last: null as null | { x: number; y: number }, max: 0 };
+    const maxV = Math.max(...values, 1);
+    const pts = values.map((v, i) => {
       const x = padX + (i * (width - padX * 2)) / Math.max(1, values.length - 1);
-      const t = (v - min) / span;
-      const y = padY + (1 - t) * (height - padY * 2);
+      const y = padY + (1 - v / maxV) * (height - padY * 2);
       return { x, y };
     });
+    const linePath = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(" ");
+    const areaPath = `${linePath} L ${pts[pts.length - 1].x.toFixed(2)} ${height} L ${pts[0].x.toFixed(2)} ${height} Z`;
+    return { line: linePath, area: areaPath, last: pts[pts.length - 1], max: maxV };
   }, [values]);
 
-  const d = useMemo(() => {
-    if (points.length === 0) return "";
-    return points
-      .map((p, i) => {
-        const cmd = i === 0 ? "M" : "L";
-        return `${cmd} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`;
-      })
-      .join(" ");
-  }, [points]);
-
-  const last = points.at(-1);
+  const hasData = values.some((v) => v > 0);
 
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="h-16 w-full">
+    <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className="h-full w-full" role="img" aria-label="Revenue over the last 14 days">
       <defs>
-        <linearGradient id="spark" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#a855f7" stopOpacity="0.9" />
-          <stop offset="50%" stopColor="#6366f1" stopOpacity="0.9" />
-          <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.9" />
+        <linearGradient id="adArea" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" style={{ stopColor: "rgb(var(--ad-gold))", stopOpacity: 0.28 }} />
+          <stop offset="100%" style={{ stopColor: "rgb(var(--ad-gold))", stopOpacity: 0 }} />
         </linearGradient>
       </defs>
-      <path d={d} fill="none" stroke="url(#spark)" strokeWidth="2.5" />
-      {last ? (
-        <circle cx={last.x} cy={last.y} r="3.5" fill="#38bdf8" />
+      <line x1="0" y1={height - 1} x2={width} y2={height - 1} style={{ stroke: "rgb(var(--ad-line))" }} strokeWidth="1" vectorEffect="non-scaling-stroke" />
+      {hasData ? (
+        <>
+          <path d={area} fill="url(#adArea)" />
+          <path d={line} fill="none" style={{ stroke: "rgb(var(--ad-gold))" }} strokeWidth="2" vectorEffect="non-scaling-stroke" strokeLinejoin="round" strokeLinecap="round" />
+          {last ? <circle cx={last.x} cy={last.y} r="3.5" style={{ fill: "rgb(var(--ad-gold-hi))", stroke: "rgb(var(--ad-canvas))" }} strokeWidth="1.5" /> : null}
+        </>
       ) : null}
+      <title>{max ? `Peak day ${formatMoney(max)}` : "No revenue yet"}</title>
     </svg>
+  );
+}
+
+function StatCell({
+  label,
+  value,
+  meta,
+  hero,
+}: {
+  label: string;
+  value: string;
+  meta?: string;
+  hero?: boolean;
+}) {
+  return (
+    <div className="bg-panel px-5 py-5">
+      <p className="text-xs font-medium text-faint">{label}</p>
+      <p className={"mt-1.5 text-2xl font-semibold tabular-nums tracking-tight " + (hero ? "text-gold" : "text-ink")}>{value}</p>
+      {meta ? <p className="mt-1 text-xs text-muted">{meta}</p> : null}
+    </div>
+  );
+}
+
+function StatSkeleton() {
+  return (
+    <div className="bg-panel px-5 py-5">
+      <div className="ad-shimmer h-3 w-20 rounded" />
+      <div className="ad-shimmer mt-2.5 h-7 w-24 rounded" />
+      <div className="ad-shimmer mt-2 h-3 w-16 rounded" />
+    </div>
   );
 }
 
@@ -249,249 +281,209 @@ export default function AdminHomePage() {
   }, [orders]);
 
   const sparkValues = useMemo(() => last14.map((d) => d.revenue), [last14]);
+  const weekRevenue = useMemo(() => sparkValues.slice(-7).reduce((s, v) => s + v, 0), [sparkValues]);
+  const maxTop = topProducts[0]?.revenue ?? 0;
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="ad-in flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm text-slate-400">Overview</p>
-          <h2 className="text-xl font-semibold tracking-tight">Admin Dashboard</h2>
+          <p className="text-sm text-muted">Welcome back — here&apos;s how the shop is doing.</p>
         </div>
-
         <div className="flex flex-wrap items-center gap-2">
-          <Link
-            href="/admin/products"
-            className="inline-flex items-center justify-center rounded-xl border border-slate-800 bg-slate-900/40 px-3 py-2 text-sm font-medium text-slate-100 hover:bg-slate-900/70"
-          >
-            Manage products
-          </Link>
-          <Link
-            href="/admin/orders"
-            className="inline-flex items-center justify-center rounded-xl border border-slate-800 bg-slate-900/40 px-3 py-2 text-sm font-medium text-slate-100 hover:bg-slate-900/70"
-          >
-            Manage orders
-          </Link>
+          <Link href="/admin/products" className="ad-btn h-9 px-3.5 py-0 text-xs">Manage products</Link>
+          <Link href="/admin/orders" className="ad-btn h-9 px-3.5 py-0 text-xs">Manage orders</Link>
         </div>
       </div>
 
-      {loading ? (
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/30 p-6">
-          <p className="text-sm text-slate-200">Loading dashboard…</p>
-        </div>
-      ) : null}
       {error ? (
-        <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-6">
-          <p className="text-sm text-rose-200">{error}</p>
+        <div className="ad-in rounded-2xl border border-danger/30 bg-danger/12 px-5 py-4">
+          <p className="text-sm text-danger">{error}</p>
         </div>
       ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-12">
-        <section className="lg:col-span-8">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/30 p-5">
-              <p className="text-sm text-slate-400">Paid revenue (all time)</p>
-              <p className="mt-1 text-2xl font-semibold tracking-tight">
-                {formatMoney(kpis.totalRevenue)}
-              </p>
-              <p className="mt-2 text-xs text-slate-500">
-                {kpis.paidOrders} paid orders
-              </p>
-            </div>
+      {/* Stat strip */}
+      <div className="ad-card ad-in overflow-hidden" style={{ animationDelay: "40ms" }}>
+        <div className="grid grid-cols-1 gap-px bg-line sm:grid-cols-2 lg:grid-cols-4">
+          {loading ? (
+            <>
+              <StatSkeleton />
+              <StatSkeleton />
+              <StatSkeleton />
+              <StatSkeleton />
+            </>
+          ) : (
+            <>
+              <StatCell label="Paid revenue" value={formatMoney(kpis.totalRevenue)} meta={`${kpis.paidOrders} paid order${kpis.paidOrders === 1 ? "" : "s"}`} hero />
+              <StatCell label="Orders" value={String(kpis.orderCount)} meta={`${kpis.pendingOrders} active / pending`} />
+              <StatCell label="Products" value={String(kpis.productCount)} meta={`${products.filter((p) => p.bestseller).length} bestsellers`} />
+              <StatCell label="Last 7 days" value={formatCompactMoney(weekRevenue)} meta="paid revenue" />
+            </>
+          )}
+        </div>
+      </div>
 
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/30 p-5">
-              <p className="text-sm text-slate-400">Orders</p>
-              <p className="mt-1 text-2xl font-semibold tracking-tight">{kpis.orderCount}</p>
-              <p className="mt-2 text-xs text-slate-500">{kpis.pendingOrders} active/pending</p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/30 p-5">
-              <p className="text-sm text-slate-400">Products</p>
-              <p className="mt-1 text-2xl font-semibold tracking-tight">{kpis.productCount}</p>
-              <p className="mt-2 text-xs text-slate-500">
-                {products.filter((p) => p.bestseller).length} marked bestseller
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/30 p-5">
-              <p className="text-sm text-slate-400">Revenue trend (14 days)</p>
-              <div className="mt-2">
-                <Sparkline values={sparkValues} />
+      <div className="grid gap-5 lg:grid-cols-12">
+        <section className="space-y-5 lg:col-span-8">
+          {/* Revenue trend */}
+          <div className="ad-card ad-in p-5" style={{ animationDelay: "80ms" }}>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-medium text-ink">Revenue trend</p>
+                <p className="text-xs text-muted">Paid orders · last 14 days</p>
               </div>
-              <p className="mt-2 text-xs text-slate-500">
-                Latest day: {formatMoney(sparkValues.at(-1) ?? 0)}
+              <p className="text-right text-sm tabular-nums text-muted">
+                <span className="text-ink">{formatMoney(sparkValues.at(-1) ?? 0)}</span>
+                <span className="block text-xs text-faint">today</span>
               </p>
+            </div>
+            <div className="mt-4 h-36">
+              {loading ? <div className="ad-shimmer h-full w-full rounded-xl" /> : <AreaChart values={sparkValues} />}
             </div>
           </div>
 
-          <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-900/30">
-            <div className="flex items-center justify-between gap-3 border-b border-slate-800 px-5 py-4">
+          {/* Recent orders */}
+          <div className="ad-card ad-in" style={{ animationDelay: "120ms" }}>
+            <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-4">
               <div>
-                <p className="text-sm font-medium">Recent orders</p>
-                <p className="text-xs text-slate-400">Latest activity</p>
+                <p className="text-sm font-medium text-ink">Recent orders</p>
+                <p className="text-xs text-muted">Latest activity</p>
               </div>
-              <Link
-                href="/admin/orders"
-                className="text-sm text-sky-200 hover:text-sky-100"
-              >
-                View all
-              </Link>
+              <Link href="/admin/orders" className="ad-btn-ghost">View all →</Link>
             </div>
 
-            <div className="sm:hidden">
-              <div className="divide-y divide-slate-800">
-                {recentOrders.map((o) => (
-                  <div key={o._id} className="px-5 py-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-slate-100">{o._id}</p>
-                        <p className="mt-0.5 text-xs text-slate-500">
-                          {new Date(o.date).toLocaleString()} · {o.items.length} items
-                        </p>
-                      </div>
-                      <p className="text-sm text-slate-200">{formatMoney(o.amount)}</p>
-                    </div>
-
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <span
-                        className={
-                          "inline-flex items-center rounded-full border px-2.5 py-1 text-xs " +
-                          (o.payment
-                            ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-200"
-                            : "border-slate-700 bg-slate-900/40 text-slate-300")
-                        }
-                      >
-                        {o.payment ? "Paid" : "Unpaid"} · {o.paymentMethod}
-                      </span>
-                      <span
-                        className={
-                          "inline-flex items-center rounded-full border px-2.5 py-1 text-xs " +
-                          statusPillClass(o.status)
-                        }
-                      >
-                        {o.status}
-                      </span>
-                    </div>
-                  </div>
+            {loading ? (
+              <div className="space-y-3 p-5">
+                {[0, 1, 2, 3].map((i) => (
+                  <div key={i} className="ad-shimmer h-12 w-full rounded-xl" />
                 ))}
-
-                {recentOrders.length === 0 ? (
-                  <div className="px-5 py-6">
-                    <p className="text-sm text-slate-400">No orders found.</p>
-                  </div>
-                ) : null}
               </div>
-            </div>
-
-            <div className="hidden overflow-x-auto sm:block">
-              <table className="min-w-[720px] w-full text-sm">
-                <thead className="text-xs text-slate-400">
-                  <tr>
-                    <th className="px-3 py-2 text-left font-medium sm:px-5 sm:py-3">Order</th>
-                    <th className="px-3 py-2 text-left font-medium sm:px-5 sm:py-3">Date</th>
-                    <th className="px-3 py-2 text-left font-medium sm:px-5 sm:py-3">Total</th>
-                    <th className="px-3 py-2 text-left font-medium sm:px-5 sm:py-3">Payment</th>
-                    <th className="px-3 py-2 text-left font-medium sm:px-5 sm:py-3">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800">
+            ) : recentOrders.length === 0 ? (
+              <div className="px-5 py-12 text-center">
+                <p className="text-sm font-medium text-ink">No orders yet</p>
+                <p className="mx-auto mt-1 max-w-sm text-sm text-muted">When a customer checks out, their order shows up here ready to fulfil.</p>
+              </div>
+            ) : (
+              <>
+                {/* mobile cards */}
+                <div className="divide-y divide-line sm:hidden">
                   {recentOrders.map((o) => (
-                    <tr key={o._id} className="hover:bg-slate-900/40">
-                      <td className="px-3 py-2 sm:px-5 sm:py-3">
-                        <p className="font-medium text-slate-100">{o._id}</p>
-                        <p className="text-xs text-slate-500">{o.items.length} items</p>
-                      </td>
-                      <td className="px-3 py-2 text-slate-200 sm:px-5 sm:py-3">
-                        {new Date(o.date).toLocaleString()}
-                      </td>
-                      <td className="px-3 py-2 text-slate-200 sm:px-5 sm:py-3">{formatMoney(o.amount)}</td>
-                      <td className="px-3 py-2 sm:px-5 sm:py-3">
-                        <span
-                          className={
-                            "inline-flex items-center rounded-full border px-2.5 py-1 text-xs " +
-                            (o.payment
-                              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-200"
-                              : "border-slate-700 bg-slate-900/40 text-slate-300")
-                          }
-                        >
+                    <div key={o._id} className="px-5 py-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate font-mono text-xs text-muted">{o._id}</p>
+                          <p className="mt-0.5 text-xs text-faint">{new Date(o.date).toLocaleString()} · {o.items.length} items</p>
+                        </div>
+                        <p className="shrink-0 text-sm font-medium tabular-nums text-ink">{formatMoney(o.amount)}</p>
+                      </div>
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <span className={"ad-pill " + (o.payment ? "border-success/30 bg-success/12 text-success" : "border-line2 bg-raised text-muted")}>
                           {o.payment ? "Paid" : "Unpaid"} · {o.paymentMethod}
                         </span>
-                      </td>
-                      <td className="px-3 py-2 sm:px-5 sm:py-3">
-                        <span
-                          className={
-                            "inline-flex items-center rounded-full border px-2.5 py-1 text-xs " +
-                            statusPillClass(o.status)
-                          }
-                        >
-                          {o.status}
-                        </span>
-                      </td>
-                    </tr>
+                        <span className={"ad-pill " + statusPillClass(o.status)}>{o.status}</span>
+                      </div>
+                    </div>
                   ))}
+                </div>
 
-                  {recentOrders.length === 0 ? (
-                    <tr>
-                      <td className="px-3 py-6 text-sm text-slate-400 sm:px-5" colSpan={5}>
-                        No orders found.
-                      </td>
-                    </tr>
-                  ) : null}
-                </tbody>
-              </table>
-            </div>
+                {/* desktop table */}
+                <div className="ad-scroll hidden overflow-x-auto sm:block">
+                  <table className="w-full min-w-[700px] text-sm">
+                    <thead>
+                      <tr className="text-xs text-faint">
+                        <th className="px-5 py-3 text-left font-medium">Order</th>
+                        <th className="px-5 py-3 text-left font-medium">Date</th>
+                        <th className="px-5 py-3 text-right font-medium">Total</th>
+                        <th className="px-5 py-3 text-left font-medium">Payment</th>
+                        <th className="px-5 py-3 text-left font-medium">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-line">
+                      {recentOrders.map((o) => (
+                        <tr key={o._id} className="transition-colors hover:bg-raised/50">
+                          <td className="px-5 py-3">
+                            <p className="font-mono text-xs text-muted">{o._id.slice(0, 8)}…{o._id.slice(-4)}</p>
+                            <p className="text-xs text-faint">{o.items.length} items</p>
+                          </td>
+                          <td className="px-5 py-3 text-muted">{new Date(o.date).toLocaleDateString()}</td>
+                          <td className="px-5 py-3 text-right font-medium tabular-nums text-ink">{formatMoney(o.amount)}</td>
+                          <td className="px-5 py-3">
+                            <span className={"ad-pill " + (o.payment ? "border-success/30 bg-success/12 text-success" : "border-line2 bg-raised text-muted")}>
+                              {o.payment ? "Paid" : "Unpaid"}
+                            </span>
+                          </td>
+                          <td className="px-5 py-3">
+                            <span className={"ad-pill " + statusPillClass(o.status)}>{o.status}</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
           </div>
         </section>
 
-        <aside className="lg:col-span-4 space-y-4">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/30 p-5">
-            <p className="text-sm font-medium">Order status</p>
-            <p className="text-xs text-slate-400">Distribution across current orders</p>
+        <aside className="space-y-5 lg:col-span-4">
+          {/* Order status */}
+          <div className="ad-card ad-in p-5" style={{ animationDelay: "100ms" }}>
+            <p className="text-sm font-medium text-ink">Order status</p>
+            <p className="text-xs text-muted">Across all current orders</p>
 
-            <div className="mt-4 space-y-3">
-              {statusBreakdown.slice(0, 8).map((s) => (
-                <div key={s.status} className="space-y-1">
-                  <div className="flex items-center justify-between gap-3 text-sm">
-                    <span className="truncate text-slate-200">{s.status}</span>
-                    <span className="text-slate-400">{s.count}</span>
+            <div className="mt-4 space-y-3.5">
+              {loading ? (
+                [0, 1, 2].map((i) => <div key={i} className="ad-shimmer h-6 w-full rounded" />)
+              ) : statusBreakdown.length === 0 ? (
+                <p className="py-4 text-sm text-muted">No orders to break down yet.</p>
+              ) : (
+                statusBreakdown.slice(0, 6).map((s) => (
+                  <div key={s.status} className="space-y-1.5">
+                    <div className="flex items-center justify-between gap-3 text-sm">
+                      <span className="truncate text-muted">{s.status}</span>
+                      <span className="tabular-nums text-faint">{s.count}</span>
+                    </div>
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-raised">
+                      <div className="h-full rounded-full bg-gradient-to-r from-gold-dim to-gold" style={{ width: `${clamp(s.pct, 4, 100)}%` }} />
+                    </div>
                   </div>
-                  <div className="h-2 w-full rounded-full bg-slate-900/60">
-                    <div
-                      className="h-2 rounded-full bg-gradient-to-r from-fuchsia-500 via-violet-500 to-sky-500"
-                      style={{ width: `${clamp(s.pct, 3, 100)}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-
-              {statusBreakdown.length === 0 ? (
-                <p className="text-sm text-slate-400">No status data yet.</p>
-              ) : null}
+                ))
+              )}
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/30">
-            <div className="border-b border-slate-800 px-5 py-4">
-              <p className="text-sm font-medium">Top products</p>
-              <p className="text-xs text-slate-400">By revenue (derived from orders)</p>
+          {/* Top products */}
+          <div className="ad-card ad-in" style={{ animationDelay: "140ms" }}>
+            <div className="border-b border-line px-5 py-4">
+              <p className="text-sm font-medium text-ink">Top products</p>
+              <p className="text-xs text-muted">By revenue from paid &amp; placed orders</p>
             </div>
-            <div className="divide-y divide-slate-800">
-              {topProducts.map((p) => (
-                <div key={p.name} className="px-5 py-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-slate-100">{p.name}</p>
-                      <p className="mt-0.5 text-xs text-slate-400">{p.quantity} sold</p>
+            {loading ? (
+              <div className="space-y-3 p-5">{[0, 1, 2].map((i) => <div key={i} className="ad-shimmer h-10 w-full rounded-xl" />)}</div>
+            ) : topProducts.length === 0 ? (
+              <div className="px-5 py-10 text-center">
+                <p className="text-sm font-medium text-ink">No sales yet</p>
+                <p className="mt-1 text-sm text-muted">Your best sellers will rank here once orders come in.</p>
+              </div>
+            ) : (
+              <ul className="divide-y divide-line">
+                {topProducts.map((p, i) => (
+                  <li key={p.name} className="flex items-center gap-3 px-5 py-3.5">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-gold/12 text-xs font-semibold tabular-nums text-gold">{i + 1}</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-ink">{p.name}</p>
+                      <p className="text-xs text-faint">{p.quantity} sold</p>
                     </div>
-                    <p className="text-sm text-slate-200">{formatMoney(p.revenue)}</p>
-                  </div>
-                </div>
-              ))}
-              {topProducts.length === 0 ? (
-                <div className="px-5 py-6">
-                  <p className="text-sm text-slate-400">No sales data yet.</p>
-                </div>
-              ) : null}
-            </div>
+                    <div className="w-24 shrink-0 text-right">
+                      <p className="text-sm font-medium tabular-nums text-ink">{formatMoney(p.revenue)}</p>
+                      <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-raised">
+                        <div className="h-full rounded-full bg-gold/60" style={{ width: `${maxTop ? clamp(Math.round((p.revenue / maxTop) * 100), 6, 100) : 0}%` }} />
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </aside>
       </div>

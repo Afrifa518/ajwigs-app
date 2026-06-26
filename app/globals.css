@@ -4,6 +4,164 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─────────────────────────────────────────────────────────────
+   Admin theme tokens (RGB channels → consumed by Tailwind colors
+   as rgb(var(--ad-x) / <alpha-value>)). Light is the default;
+   .ad-dark flips them. See DESIGN.md.
+   ───────────────────────────────────────────────────────────── */
+.ad-theme {
+  color-scheme: light;
+  /* surfaces */
+  --ad-canvas: 246 244 239;
+  --ad-panel: 255 255 255;
+  --ad-raised: 249 247 243;
+  --ad-raised2: 241 238 231;
+  --ad-line: 230 225 215;
+  --ad-line2: 214 207 193;
+  /* text */
+  --ad-ink: 28 24 19;
+  --ad-muted: 99 91 78;
+  --ad-faint: 124 115 97;
+  /* accent (readable as text on light) */
+  --ad-gold: 154 122 42;
+  --ad-gold-hi: 122 95 30;
+  --ad-gold-dim: 176 150 92;
+  --ad-on-gold: 255 255 255;
+  /* semantic */
+  --ad-success: 39 119 84;
+  --ad-info: 41 105 145;
+  --ad-indigoish: 78 84 168;
+  --ad-warning: 164 104 22;
+  --ad-danger: 180 64 54;
+}
+
+.ad-dark {
+  color-scheme: dark;
+  --ad-canvas: 20 17 12;
+  --ad-panel: 27 23 17;
+  --ad-raised: 34 29 22;
+  --ad-raised2: 42 36 27;
+  --ad-line: 50 43 32;
+  --ad-line2: 66 58 43;
+  --ad-ink: 243 236 221;
+  --ad-muted: 183 172 149;
+  --ad-faint: 150 139 116;
+  --ad-gold: 201 162 75;
+  --ad-gold-hi: 224 189 110;
+  --ad-gold-dim: 154 124 56;
+  --ad-on-gold: 28 20 8;
+  --ad-success: 111 184 147;
+  --ad-info: 121 166 200;
+  --ad-indigoish: 142 147 208;
+  --ad-warning: 226 163 60;
+  --ad-danger: 215 126 107;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Admin design system — light/dark "luxe + gold" (see DESIGN.md)
+   Scoped to the admin via the .ad-* class vocabulary.
+   ───────────────────────────────────────────────────────────── */
+@layer components {
+  .ad-card {
+    @apply rounded-2xl border border-line bg-panel;
+  }
+  .ad-card-raised {
+    @apply rounded-xl border border-line bg-raised;
+  }
+
+  .ad-input {
+    @apply w-full rounded-xl border border-line bg-raised px-3.5 py-2.5 text-sm text-ink
+      placeholder:text-faint outline-none transition-colors duration-150
+      focus:border-gold/60 focus:ring-2 focus:ring-gold/20
+      disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .ad-label {
+    @apply text-xs font-medium text-muted;
+  }
+
+  .ad-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-line bg-raised
+      px-4 py-2.5 text-sm font-medium text-ink transition-colors duration-150
+      hover:bg-raised2 hover:border-line2
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40
+      disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .ad-btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gold
+      px-4 py-2.5 text-sm font-semibold text-ongold transition-colors duration-150
+      hover:bg-gold-hi
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:ring-offset-2 focus-visible:ring-offset-panel
+      disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .ad-btn-ghost {
+    @apply inline-flex items-center gap-1.5 text-sm font-medium text-gold transition-colors duration-150
+      hover:text-gold-hi
+      focus-visible:outline-none focus-visible:underline;
+  }
+
+  .ad-pill {
+    @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium;
+  }
+}
+
+/* Restore a thin styled scrollbar inside admin scroll areas
+   (the global rule below hides scrollbars everywhere else). */
+.ad-scroll::-webkit-scrollbar {
+  display: block;
+  height: 8px;
+  width: 8px;
+}
+.ad-scroll::-webkit-scrollbar-thumb {
+  background-color: rgb(var(--ad-line2));
+  border-radius: 9999px;
+}
+.ad-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.ad-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--ad-line2)) transparent;
+}
+
+/* Motion: soft staggered reveal + skeleton shimmer (state, not decoration) */
+.ad-in {
+  animation: adFadeIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes adFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.ad-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgb(var(--ad-raised)) 0%,
+    rgb(var(--ad-raised2)) 50%,
+    rgb(var(--ad-raised)) 100%
+  );
+  background-size: 200% 100%;
+  animation: adShimmer 1.4s ease-in-out infinite;
+}
+@keyframes adShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ad-in,
+  .ad-shimmer {
+    animation: none;
+  }
+}
+
 a.active hr{
   display: block;
 }
