@@ -1,38 +1,21 @@
 import Hero from "@/app/storefront/components/Hero";
-import Reveal from "@/app/storefront/components/Reveal";
-import HomeHighlights from "@/app/storefront/components/HomeHighlights";
-import FeaturedCategories from "@/app/storefront/components/FeaturedCategories";
-import LatestCollection from "@/app/storefront/components/LatestCollection";
-import BestSeller from "@/app/storefront/components/BestSeller";
-import LookbookGrid from "@/app/storefront/components/LookbookGrid";
-import TestimonialsMarquee from "@/app/storefront/components/TestimonialsMarquee";
-import HomeCtaBanner from "@/app/storefront/components/HomeCtaBanner";
+import Confidence from "@/app/storefront/components/home/Confidence";
+import Craftsmanship from "@/app/storefront/components/home/Craftsmanship";
+import BestSellers from "@/app/storefront/components/home/BestSellers";
+import WhyElOlux from "@/app/storefront/components/home/WhyElOlux";
+import TrustProof from "@/app/storefront/components/home/TrustProof";
+import FinalCta from "@/app/storefront/components/home/FinalCta";
 
 export default function HomePage() {
   return (
-    <div>
+    <div className="relative">
       <Hero />
-      <Reveal>
-        <HomeHighlights />
-      </Reveal>
-      <Reveal>
-        <FeaturedCategories />
-      </Reveal>
-      <Reveal>
-        <LatestCollection />
-      </Reveal>
-      <Reveal>
-        <BestSeller />
-      </Reveal>
-      <Reveal>
-        <LookbookGrid />
-      </Reveal>
-      <Reveal>
-        <TestimonialsMarquee />
-      </Reveal>
-      <Reveal>
-        <HomeCtaBanner />
-      </Reveal>
+      <Confidence />
+      <Craftsmanship />
+      <BestSellers />
+      <WhyElOlux />
+      <TrustProof />
+      <FinalCta />
     </div>
   );
 }

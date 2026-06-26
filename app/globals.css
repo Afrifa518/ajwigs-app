@@ -192,6 +192,19 @@ body {
   height: 100%;
 }
 
+/* Warm ivory base sits behind the fixed -z-10 atmosphere so there is never a
+   bare/void area on the storefront. The admin renders its own full-height
+   themed root on top, so it is unaffected. */
+body {
+  background-color: #f6f2ea;
+}
+
+/* Prevent horizontal scroll from full-bleed (100vw) sections without
+   clipping them or breaking sticky positioning. */
+html {
+  overflow-x: clip;
+}
+
 .marquee {
   overflow: hidden;
 }
@@ -243,6 +256,82 @@ body {
 
 .hero-enter-delay-3 {
   animation-delay: 320ms;
+}
+
+:root {
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Hero gold underline draws in after the headline lands. */
+.gold-draw {
+  transform-origin: left center;
+  animation: goldDraw 0.85s var(--ease-out-expo) 0.65s both;
+}
+@keyframes goldDraw {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Soft clip-reveal for the hero photograph. */
+.img-reveal {
+  animation: imgReveal 1.1s var(--ease-out-expo) both;
+}
+@keyframes imgReveal {
+  from {
+    clip-path: inset(0 0 16% 0);
+    opacity: 0;
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gold-draw,
+  .img-reveal {
+    animation: none;
+  }
+}
+
+/* Tactile press feedback for primary calls-to-action. */
+.press {
+  transition: transform 0.18s var(--ease-out-quint);
+}
+.press:active {
+  transform: scale(0.97);
+}
+@media (prefers-reduced-motion: reduce) {
+  .press {
+    transition: none;
+  }
+  .press:active {
+    transform: none;
+  }
+}
+
+/* Cinematic slow zoom for hero photography (Ken Burns). */
+.kenburns {
+  animation: kenburns 18s ease-out both;
+}
+@keyframes kenburns {
+  from {
+    transform: scale(1.12);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kenburns {
+    animation: none;
+    transform: none;
+  }
 }
 
 @keyframes fadeUp {
