@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import StorefrontNavbar from "@/app/storefront/components/StorefrontNavbar";
 import StorefrontSearchBar from "@/app/storefront/components/StorefrontSearchBar";
 import StorefrontFooter from "@/app/storefront/components/StorefrontFooter";
+import WhatsAppButton from "@/app/storefront/components/WhatsAppButton";
 
 export default function StorefrontFrame({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -20,6 +21,7 @@ export default function StorefrontFrame({ children }: { children: ReactNode }) {
       <StorefrontSearchBar />
       {children}
       <StorefrontFooter />
+      <WhatsAppButton />
     </div>
   );
 }

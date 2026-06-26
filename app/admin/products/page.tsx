@@ -4,10 +4,7 @@ import Image from "next/image";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { getAccessToken } from "@/app/admin/_lib/supabase";
 import { useShop } from "@/app/providers";
-import {
-  PRODUCT_CATEGORIES,
-  PRODUCT_SUBCATEGORY_GROUPS,
-} from "@/app/storefront/catalog";
+import { fetchTaxonomy, FALLBACK_TAXONOMY, type Taxonomy } from "@/lib/taxonomy";
 
 type Product = {
   _id: string;
@@ -121,6 +118,7 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
+  const [taxonomy, setTaxonomy] = useState<Taxonomy>(FALLBACK_TAXONOMY);
 
   const [query, setQuery] = useState("");
 
@@ -185,6 +183,7 @@ export default function AdminProductsPage() {
 
   useEffect(() => {
     void load();
+    void fetchTaxonomy().then(setTaxonomy);
   }, []);
 
   const removeProduct = async (id: string) => {
@@ -348,8 +347,8 @@ export default function AdminProductsPage() {
                   <label className="ad-label">Category</label>
                   <select className="ad-input" value={category} onChange={(e) => setCategory(e.target.value)} required>
                     <option value="" disabled>Select a category</option>
-                    {PRODUCT_CATEGORIES.map((c) => (
-                      <option key={c.value} value={c.value}>{c.label}</option>
+                    {taxonomy.categories.map((c) => (
+                      <option key={c.id ?? c.value} value={c.value}>{c.label}</option>
                     ))}
                   </select>
                 </div>
@@ -357,10 +356,10 @@ export default function AdminProductsPage() {
                   <label className="ad-label">Subcategory</label>
                   <select className="ad-input" value={subCategory} onChange={(e) => setSubCategory(e.target.value)} required>
                     <option value="" disabled>Select a subcategory</option>
-                    {PRODUCT_SUBCATEGORY_GROUPS.map((g) => (
-                      <optgroup key={g.label} label={g.label}>
+                    {taxonomy.groups.map((g) => (
+                      <optgroup key={g.id ?? g.label} label={g.label}>
                         {g.options.map((s) => (
-                          <option key={s.value} value={s.value}>{s.label}</option>
+                          <option key={s.id ?? s.value} value={s.value}>{s.label}</option>
                         ))}
                       </optgroup>
                     ))}

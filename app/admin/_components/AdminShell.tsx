@@ -38,6 +38,14 @@ const IconBox = ({ className }: { className?: string }) => (
   </svg>
 );
 
+const IconLayers = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className} stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
+    <path d="m12 3 9 5-9 5-9-5 9-5Z" />
+    <path d="m3 12 9 5 9-5" />
+    <path d="m3 16 9 5 9-5" />
+  </svg>
+);
+
 const IconStore = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" className={className} stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
     <path d="M3 9.5 4.5 4h15L21 9.5" />
@@ -85,12 +93,14 @@ const IconMoon = ({ className }: { className?: string }) => (
 const navItems: NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: IconGrid },
   { href: "/admin/products", label: "Products", icon: IconBox },
+  { href: "/admin/categories", label: "Categories", icon: IconLayers },
   { href: "/admin/orders", label: "Orders", icon: IconTag },
 ];
 
 const getPageTitle = (pathname: string) => {
   if (pathname === "/admin") return "Dashboard";
   if (pathname.startsWith("/admin/products")) return "Products";
+  if (pathname.startsWith("/admin/categories")) return "Categories";
   if (pathname.startsWith("/admin/orders")) return "Orders";
   return "Admin";
 };
