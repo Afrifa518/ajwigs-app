@@ -17,7 +17,7 @@ export default function ContactPage() {
             60 Abbotts Road, 60, <br />Mitcham, CR4 1JU, United Kingdom
           </p>
           <p className="text-gray-500">
-            Tel: +44 7960 609298 <br />Email: houseofajwigs@gmail.com
+            Tel: +44 7960 609298 <br />Email: adwoaafrifa2@gmail.com
           </p>
           <p></p>
           <p></p>

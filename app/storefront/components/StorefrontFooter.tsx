@@ -26,7 +26,7 @@ export default function StorefrontFooter() {
           <p className="text-xl font-medium mb-5">GET IN TOUCH</p>
           <ul className="flex flex-col gap-1 text-gray-600">
             <li>+44 7960 609298</li>
-            <li>houseofajwigs@gmail.com</li>
+            <li>adwoaafrifa2@gmail.com</li>
           </ul>
         </div>
       </div>
