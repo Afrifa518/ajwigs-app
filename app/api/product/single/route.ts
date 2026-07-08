@@ -12,6 +12,7 @@ type DbProduct = {
   sizes: string[] | null;
   colors: string[] | null;
   image_urls: string[];
+  video_urls: string[] | null;
   bestseller: boolean;
   created_at: string;
 };
@@ -30,7 +31,7 @@ export async function POST(request: Request) {
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id,name,description,price_pence,category,subcategory,sizes,colors,image_urls,bestseller,created_at"
+        "id,name,description,price_pence,category,subcategory,sizes,colors,image_urls,video_urls,bestseller,created_at"
       )
       .eq("id", productId)
       .single();
@@ -51,6 +52,7 @@ export async function POST(request: Request) {
       colors: p.colors ?? [],
       bestseller: p.bestseller,
       image: p.image_urls,
+      video: p.video_urls ?? [],
       date: new Date(p.created_at).getTime(),
     };
 

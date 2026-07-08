@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { getAccessToken } from "@/app/admin/_lib/supabase";
 import { useShop } from "@/app/providers";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { fetchTaxonomy, FALLBACK_TAXONOMY, type Taxonomy } from "@/lib/taxonomy";
 
 type Product = {
@@ -17,6 +17,7 @@ type Product = {
   colors: string[];
   bestseller: boolean;
   image: string[];
+  video?: string[];
 };
 
 type ProductListResponse = {
@@ -30,6 +31,10 @@ type BasicResponse = {
   message?: string;
 };
 
+const MAX_IMAGE_BYTES = 15 * 1024 * 1024; // 15 MB per photo
+const MAX_VIDEO_BYTES = 50 * 1024 * 1024; // 50 MB per video
+const STORAGE_BUCKET = "product-images";
+
 const formatMoney = (amount: number) =>
   new Intl.NumberFormat("en-GB", {
     style: "currency",
@@ -37,66 +42,138 @@ const formatMoney = (amount: number) =>
     maximumFractionDigits: 2,
   }).format(amount);
 
-function ImageSlot({
-  index,
+const formatBytes = (bytes: number) => {
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+// A single selected file, shown as a live local preview before upload.
+function MediaTile({
   file,
-  onChange,
+  kind,
+  index,
+  onRemove,
 }: {
+  file: File;
+  kind: "image" | "video";
   index: number;
-  file: File | null;
-  onChange: (f: File | null) => void;
+  onRemove: () => void;
 }) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [url, setUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!file) {
-      setPreview(null);
-      return;
-    }
-    const url = URL.createObjectURL(file);
-    setPreview(url);
-    return () => URL.revokeObjectURL(url);
+    const u = URL.createObjectURL(file);
+    setUrl(u);
+    return () => URL.revokeObjectURL(u);
   }, [file]);
 
   return (
-    <div className="relative">
+    <div className="group relative aspect-square overflow-hidden rounded-xl border border-line2 bg-raised">
+      {url ? (
+        kind === "image" ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={url} alt={`Photo ${index + 1}`} className="h-full w-full object-cover" />
+        ) : (
+          <>
+            <video src={url} className="h-full w-full object-cover" muted playsInline preload="metadata" />
+            <span className="pointer-events-none absolute inset-0 grid place-items-center">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-black/55 text-white backdrop-blur-sm">
+                <svg viewBox="0 0 24 24" fill="currentColor" className="ml-0.5 h-3.5 w-3.5">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </span>
+            </span>
+          </>
+        )
+      ) : null}
+
+      <span className="pointer-events-none absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/60 to-transparent px-1.5 pb-1 pt-3 text-[10px] text-white/90">
+        {formatBytes(file.size)}
+      </span>
+
       <button
         type="button"
-        onClick={() => inputRef.current?.click()}
-        className="group flex aspect-square w-full items-center justify-center overflow-hidden rounded-xl border border-dashed border-line2 bg-raised transition-colors hover:border-gold/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/30"
-        aria-label={preview ? `Replace image ${index}` : `Add image ${index}`}
+        onClick={onRemove}
+        className="absolute right-1 top-1 inline-flex h-5 w-5 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white opacity-0 shadow backdrop-blur-sm transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
+        aria-label={`Remove ${kind} ${index + 1}`}
       >
-        {preview ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={preview} alt={`Selected image ${index}`} className="h-full w-full object-cover" />
-        ) : (
-          <span className="flex flex-col items-center gap-1 text-faint transition-colors group-hover:text-muted">
-            <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-            <span className="text-[11px]">Image {index}</span>
-          </span>
-        )}
+        <svg viewBox="0 0 24 24" fill="none" className="h-3 w-3" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
+          <path d="M18 6 6 18M6 6l12 12" />
+        </svg>
       </button>
-      {preview ? (
+    </div>
+  );
+}
+
+// A reusable uploader: a wrapping grid of thumbnails + a dashed "add" tile that
+// opens a multi-select file picker. No fixed count — add as many as needed.
+function MediaUploader({
+  kind,
+  label,
+  hint,
+  accept,
+  files,
+  disabled,
+  onAdd,
+  onRemoveAt,
+}: {
+  kind: "image" | "video";
+  label: string;
+  hint: string;
+  accept: string;
+  files: File[];
+  disabled: boolean;
+  onAdd: (files: File[]) => void;
+  onRemoveAt: (index: number) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  return (
+    <div className="grid gap-1.5">
+      <label className="ad-label flex items-center justify-between">
+        <span>
+          {label} <span className="text-faint">({hint})</span>
+        </span>
+        {files.length > 0 ? (
+          <span className="text-faint">{files.length} selected</span>
+        ) : null}
+      </label>
+
+      <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4">
+        {files.map((file, i) => (
+          <MediaTile
+            key={`${file.name}-${file.size}-${file.lastModified}-${i}`}
+            file={file}
+            kind={kind}
+            index={i}
+            onRemove={() => onRemoveAt(i)}
+          />
+        ))}
+
         <button
           type="button"
-          onClick={() => onChange(null)}
-          className="absolute -right-1.5 -top-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full border border-line2 bg-panel text-muted shadow transition-colors hover:text-danger"
-          aria-label={`Remove image ${index}`}
+          disabled={disabled}
+          onClick={() => inputRef.current?.click()}
+          className="group flex aspect-square w-full flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-line2 bg-raised text-faint transition-colors hover:border-gold/60 hover:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/30 disabled:cursor-not-allowed disabled:opacity-50"
+          aria-label={`Add ${kind === "image" ? "photos" : "videos"}`}
         >
-          <svg viewBox="0 0 24 24" fill="none" className="h-3 w-3" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
-            <path d="M18 6 6 18M6 6l12 12" />
+          <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 5v14M5 12h14" />
           </svg>
+          <span className="text-[11px]">{files.length > 0 ? "Add more" : `Add ${kind === "image" ? "photos" : "videos"}`}</span>
         </button>
-      ) : null}
+      </div>
+
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept={accept}
+        multiple
         className="sr-only"
-        onChange={(e) => onChange(e.target.files?.[0] ?? null)}
+        onChange={(e) => {
+          onAdd(Array.from(e.target.files ?? []));
+          e.target.value = "";
+        }}
       />
     </div>
   );
@@ -130,11 +207,10 @@ export default function AdminProductsPage() {
   const [sizesCsv, setSizesCsv] = useState("");
   const [colorsCsv, setColorsCsv] = useState("");
   const [bestseller, setBestseller] = useState(false);
-  const [image1, setImage1] = useState<File | null>(null);
-  const [image2, setImage2] = useState<File | null>(null);
-  const [image3, setImage3] = useState<File | null>(null);
-  const [image4, setImage4] = useState<File | null>(null);
+  const [images, setImages] = useState<File[]>([]);
+  const [videos, setVideos] = useState<File[]>([]);
   const [creating, setCreating] = useState(false);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
 
   const parsedSizes = useMemo(() => sizesCsv.split(",").map((s) => s.trim()).filter(Boolean), [sizesCsv]);
   const parsedColors = useMemo(() => colorsCsv.split(",").map((s) => s.trim()).filter(Boolean), [colorsCsv]);
@@ -191,7 +267,9 @@ export default function AdminProductsPage() {
     if (!confirm("Remove this product? This cannot be undone.")) return;
 
     try {
-      const accessToken = await getAccessToken();
+      const supabase = createSupabaseBrowserClient();
+      const { data: sess } = await supabase.auth.getSession();
+      const accessToken = sess.session?.access_token ?? null;
       const headers: Record<string, string> = { "Content-Type": "application/json" };
       if (accessToken) headers.token = accessToken;
 
@@ -214,32 +292,109 @@ export default function AdminProductsPage() {
     }
   };
 
+  const addImages = (incoming: File[]) => {
+    const valid: File[] = [];
+    for (const f of incoming) {
+      if (!f.type.startsWith("image/")) {
+        setError(`"${f.name}" isn't an image and was skipped.`);
+        continue;
+      }
+      if (f.size > MAX_IMAGE_BYTES) {
+        setError(`"${f.name}" is over 15 MB and was skipped.`);
+        continue;
+      }
+      valid.push(f);
+    }
+    if (valid.length) setImages((prev) => [...prev, ...valid]);
+  };
+
+  const addVideos = (incoming: File[]) => {
+    const valid: File[] = [];
+    for (const f of incoming) {
+      if (!f.type.startsWith("video/")) {
+        setError(`"${f.name}" isn't a video and was skipped.`);
+        continue;
+      }
+      if (f.size > MAX_VIDEO_BYTES) {
+        setError(`"${f.name}" is over 50 MB and was skipped.`);
+        continue;
+      }
+      valid.push(f);
+    }
+    if (valid.length) setVideos((prev) => [...prev, ...valid]);
+  };
+
   const onCreate = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+
+    if (images.length === 0) {
+      setError("Add at least one product photo.");
+      return;
+    }
+
     setCreating(true);
 
     try {
-      const accessToken = await getAccessToken();
-      const headers: Record<string, string> = {};
-      if (accessToken) headers.token = accessToken;
+      const supabase = createSupabaseBrowserClient();
+      const { data: sess } = await supabase.auth.getSession();
+      const uid = sess.session?.user?.id;
+      const accessToken = sess.session?.access_token ?? null;
 
-      const form = new FormData();
-      form.set("name", name);
-      form.set("description", description);
-      form.set("price", price || "0");
-      form.set("category", category);
-      form.set("subCategory", subCategory);
-      form.set("sizes", JSON.stringify(parsedSizes));
-      form.set("colors", JSON.stringify(parsedColors));
-      form.set("bestseller", bestseller ? "true" : "false");
+      if (!uid || !accessToken) {
+        setError("Your session has expired. Please sign in again.");
+        return;
+      }
 
-      if (image1) form.set("image1", image1);
-      if (image2) form.set("image2", image2);
-      if (image3) form.set("image3", image3);
-      if (image4) form.set("image4", image4);
+      const total = images.length + videos.length;
+      let done = 0;
+      setProgress({ done, total });
 
-      const res = await fetch("/api/product/add", { method: "POST", headers, body: form });
+      // Upload each file straight to Supabase Storage from the browser. This
+      // avoids Vercel's ~4.5 MB request-body limit entirely, so photos and
+      // videos of any reasonable size go through.
+      const uploadOne = async (file: File): Promise<string> => {
+        const ext = (file.name.split(".").pop() ?? "").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 5);
+        const path = `${uid}/${crypto.randomUUID()}${ext ? "." + ext : ""}`;
+
+        const { error: upErr } = await supabase.storage
+          .from(STORAGE_BUCKET)
+          .upload(path, file, { contentType: file.type, upsert: false });
+
+        if (upErr) throw new Error(upErr.message);
+
+        const { data } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+        if (!data.publicUrl) throw new Error("Could not generate a public URL for an upload.");
+
+        done += 1;
+        setProgress({ done, total });
+        return data.publicUrl;
+      };
+
+      const imageUrls: string[] = [];
+      for (const file of images) imageUrls.push(await uploadOne(file));
+
+      const videoUrls: string[] = [];
+      for (const file of videos) videoUrls.push(await uploadOne(file));
+
+      setProgress(null);
+
+      const res = await fetch("/api/product/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", token: accessToken },
+        body: JSON.stringify({
+          name,
+          description,
+          price: price || "0",
+          category,
+          subCategory,
+          sizes: parsedSizes,
+          colors: parsedColors,
+          bestseller,
+          imageUrls,
+          videoUrls,
+        }),
+      });
 
       const data = (await res.json()) as BasicResponse;
       if (!data.success) {
@@ -255,19 +410,24 @@ export default function AdminProductsPage() {
       setSizesCsv("");
       setColorsCsv("");
       setBestseller(false);
-      setImage1(null);
-      setImage2(null);
-      setImage3(null);
-      setImage4(null);
+      setImages([]);
+      setVideos([]);
 
       await Promise.all([load(), refreshShop()]);
     } catch (err) {
       console.error(err);
-      setError("Failed to add product");
+      setError(err instanceof Error ? err.message : "Failed to add product");
     } finally {
       setCreating(false);
+      setProgress(null);
     }
   };
+
+  const submitLabel = creating
+    ? progress
+      ? `Uploading ${progress.done}/${progress.total}…`
+      : "Saving…"
+    : "Add product";
 
   return (
     <div className="space-y-6">
@@ -379,15 +539,27 @@ export default function AdminProductsPage() {
                 <Chips items={parsedColors} />
               </div>
 
-              <div className="grid gap-1.5">
-                <label className="ad-label">Photos <span className="text-faint">(up to 4)</span></label>
-                <div className="grid grid-cols-4 gap-2.5">
-                  <ImageSlot index={1} file={image1} onChange={setImage1} />
-                  <ImageSlot index={2} file={image2} onChange={setImage2} />
-                  <ImageSlot index={3} file={image3} onChange={setImage3} />
-                  <ImageSlot index={4} file={image4} onChange={setImage4} />
-                </div>
-              </div>
+              <MediaUploader
+                kind="image"
+                label="Photos"
+                hint="add as many as you like · up to 15 MB each"
+                accept="image/*"
+                files={images}
+                disabled={creating}
+                onAdd={addImages}
+                onRemoveAt={(i) => setImages((prev) => prev.filter((_, idx) => idx !== i))}
+              />
+
+              <MediaUploader
+                kind="video"
+                label="Videos"
+                hint="optional · up to 50 MB each"
+                accept="video/*"
+                files={videos}
+                disabled={creating}
+                onAdd={addVideos}
+                onRemoveAt={(i) => setVideos((prev) => prev.filter((_, idx) => idx !== i))}
+              />
 
               <label className="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-line bg-raised px-3.5 py-3">
                 <span>
@@ -398,7 +570,7 @@ export default function AdminProductsPage() {
               </label>
 
               <button className="ad-btn-primary mt-1" type="submit" disabled={creating}>
-                {creating ? "Adding…" : "Add product"}
+                {submitLabel}
               </button>
             </form>
           </div>
@@ -449,11 +621,16 @@ export default function AdminProductsPage() {
                         <p className="shrink-0 text-sm font-medium tabular-nums text-ink">{formatMoney(p.price)}</p>
                       </div>
                       <div className="mt-3 flex items-center justify-between gap-2">
-                        {p.bestseller ? (
-                          <span className="ad-pill border-gold/30 bg-gold/12 text-gold">★ Bestseller</span>
-                        ) : (
-                          <span className="ad-pill border-line2 bg-raised text-muted">Standard</span>
-                        )}
+                        <div className="flex items-center gap-1.5">
+                          {p.bestseller ? (
+                            <span className="ad-pill border-gold/30 bg-gold/12 text-gold">★ Bestseller</span>
+                          ) : (
+                            <span className="ad-pill border-line2 bg-raised text-muted">Standard</span>
+                          )}
+                          {p.video && p.video.length > 0 ? (
+                            <span className="ad-pill border-line2 bg-raised text-muted">▶ {p.video.length}</span>
+                          ) : null}
+                        </div>
                         <button className="ad-btn h-8 px-3 py-0 text-xs text-danger hover:border-danger/40" type="button" onClick={() => void removeProduct(p._id)}>Remove</button>
                       </div>
                     </div>
@@ -467,6 +644,7 @@ export default function AdminProductsPage() {
                       <tr className="text-xs text-faint">
                         <th className="px-5 py-3 text-left font-medium">Product</th>
                         <th className="px-5 py-3 text-left font-medium">Category</th>
+                        <th className="px-5 py-3 text-left font-medium">Media</th>
                         <th className="px-5 py-3 text-right font-medium">Price</th>
                         <th className="px-5 py-3 text-left font-medium">Flag</th>
                         <th className="px-5 py-3 text-right font-medium">Actions</th>
@@ -487,6 +665,12 @@ export default function AdminProductsPage() {
                             </div>
                           </td>
                           <td className="px-5 py-3 text-muted">{p.category} / {p.subCategory}</td>
+                          <td className="px-5 py-3 text-muted">
+                            <span className="tabular-nums">{p.image?.length ?? 0} photo{(p.image?.length ?? 0) === 1 ? "" : "s"}</span>
+                            {p.video && p.video.length > 0 ? (
+                              <span className="tabular-nums text-gold"> · {p.video.length} video{p.video.length === 1 ? "" : "s"}</span>
+                            ) : null}
+                          </td>
                           <td className="px-5 py-3 text-right font-medium tabular-nums text-ink">{formatMoney(p.price)}</td>
                           <td className="px-5 py-3">
                             {p.bestseller ? (

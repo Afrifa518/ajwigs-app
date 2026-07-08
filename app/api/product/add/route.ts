@@ -1,12 +1,9 @@
-import crypto from "crypto";
 import { NextResponse } from "next/server";
 import { createSupabaseRouteHandlerClient } from "@/lib/supabase/route-handler";
 import { ApiError, isApiError } from "@/lib/api-error";
 import { assertAdminOrThrow, getUserOrThrow } from "@/lib/auth/guards";
 
 export const runtime = "nodejs";
-
-const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB per image
 
 type ProductInsert = {
   name: string;
@@ -17,29 +14,34 @@ type ProductInsert = {
   sizes: string[];
   colors: string[];
   image_urls: string[];
+  video_urls: string[];
   bestseller: boolean;
 };
 
-const parseBool = (value: FormDataEntryValue | null): boolean => {
-  if (value === null) return false;
-  if (typeof value !== "string") return true;
-  return value === "true" || value === "on" || value === "1";
+type AddBody = {
+  name?: unknown;
+  description?: unknown;
+  price?: unknown;
+  category?: unknown;
+  subCategory?: unknown;
+  sizes?: unknown;
+  colors?: unknown;
+  bestseller?: unknown;
+  imageUrls?: unknown;
+  videoUrls?: unknown;
 };
 
-const parseStringArray = (value: FormDataEntryValue | null): string[] => {
-  if (!value) return [];
-  if (typeof value !== "string") return [];
+const asStringArray = (value: unknown): string[] =>
+  Array.isArray(value) ? value.filter((x): x is string => typeof x === "string") : [];
 
-  try {
-    const parsed = JSON.parse(value);
-    if (Array.isArray(parsed) && parsed.every((x) => typeof x === "string")) {
-      return parsed;
-    }
-  } catch {
-    // ignore
-  }
-
-  return [];
+// Media is uploaded straight from the admin's browser to Supabase Storage (so we
+// never hit Vercel's ~4.5 MB request-body limit). The client then sends us the
+// resulting public URLs. We only accept URLs that genuinely live in our own
+// product-images bucket, so a forged request can't inject arbitrary links.
+const publicPrefix = () => {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!base) return null;
+  return `${base.replace(/\/$/, "")}/storage/v1/object/public/product-images/`;
 };
 
 export async function POST(request: Request) {
@@ -49,89 +51,47 @@ export async function POST(request: Request) {
     const user = await getUserOrThrow(supabase);
     await assertAdminOrThrow(supabase, user.id);
 
-    const formData = await request.formData();
+    const body = (await request.json()) as AddBody;
 
-    const name = formData.get("name");
-    const description = formData.get("description");
-    const priceRaw = formData.get("price");
-    const category = formData.get("category");
-    const subCategory = formData.get("subCategory");
-    const sizesRaw = formData.get("sizes");
-    const colorsRaw = formData.get("colors");
-    const bestsellerRaw = formData.get("bestseller");
+    const name = typeof body.name === "string" ? body.name.trim() : "";
+    const description = typeof body.description === "string" ? body.description.trim() : "";
+    const category = typeof body.category === "string" ? body.category.trim() : "";
+    const subCategory = typeof body.subCategory === "string" ? body.subCategory.trim() : "";
 
-    if (
-      typeof name !== "string" ||
-      typeof description !== "string" ||
-      typeof priceRaw !== "string" ||
-      typeof category !== "string" ||
-      typeof subCategory !== "string"
-    ) {
+    if (!name || !description || !category || !subCategory) {
       throw new ApiError(400, "Missing required fields");
     }
 
-    const priceNumber = Number(priceRaw);
+    const priceNumber = Number(body.price);
     if (!Number.isFinite(priceNumber) || priceNumber < 0) {
       throw new ApiError(400, "Invalid price");
     }
 
-    const parsedSizes = parseStringArray(sizesRaw);
-    const parsedColors = parseStringArray(colorsRaw);
-    const hasColorsField = colorsRaw !== null;
-
-    const sizes = hasColorsField ? parsedSizes : [];
-    const colors = hasColorsField ? parsedColors : parsedSizes;
-
-    if (hasColorsField && (!sizes.length || !colors.length)) {
+    const sizes = asStringArray(body.sizes).map((s) => s.trim()).filter(Boolean);
+    const colors = asStringArray(body.colors).map((s) => s.trim()).filter(Boolean);
+    if (!sizes.length || !colors.length) {
       throw new ApiError(400, "Missing sizes or colors");
     }
-    const bestseller = parseBool(bestsellerRaw);
 
-    const imageUrls: string[] = [];
+    const prefix = publicPrefix();
+    if (!prefix) {
+      throw new ApiError(500, "Storage is not configured");
+    }
 
-    for (const key of ["image1", "image2", "image3", "image4"]) {
-      const entry = formData.get(key);
-      if (!entry) continue;
-      if (typeof entry === "string") continue;
-
-      const file = entry as File;
-      if (!file.size) continue;
-
-      if (!file.type.startsWith("image/")) {
-        throw new ApiError(400, "Only image files can be uploaded");
+    const validateUrls = (urls: string[], label: string): string[] => {
+      for (const url of urls) {
+        if (!url.startsWith(prefix)) {
+          throw new ApiError(400, `Invalid ${label} URL`);
+        }
       }
-      if (file.size > MAX_IMAGE_BYTES) {
-        throw new ApiError(400, "Each image must be 5 MB or smaller");
-      }
+      return urls;
+    };
 
-      const bytes = await file.arrayBuffer();
-      const blob = new Blob([bytes], {
-        type: file.type,
-      });
-      // Use a safe, random object name — don't trust the client filename.
-      const safeExt = (file.name.split(".").pop() ?? "").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 5);
-      const objectPath = `${user.id}/${crypto.randomUUID()}${safeExt ? "." + safeExt : ""}`;
+    const imageUrls = validateUrls(asStringArray(body.imageUrls), "image");
+    const videoUrls = validateUrls(asStringArray(body.videoUrls), "video");
 
-      const { error: uploadError } = await supabase.storage
-        .from("product-images")
-        .upload(objectPath, blob, {
-          contentType: file.type,
-          upsert: false,
-        });
-
-      if (uploadError) {
-        throw new ApiError(500, uploadError.message);
-      }
-
-      const { data: publicUrlData } = supabase.storage
-        .from("product-images")
-        .getPublicUrl(objectPath);
-
-      if (!publicUrlData.publicUrl) {
-        throw new ApiError(500, "Failed to generate public image URL");
-      }
-
-      imageUrls.push(publicUrlData.publicUrl);
+    if (!imageUrls.length) {
+      throw new ApiError(400, "Add at least one product photo");
     }
 
     const payload: ProductInsert = {
@@ -143,7 +103,8 @@ export async function POST(request: Request) {
       sizes,
       colors,
       image_urls: imageUrls,
-      bestseller,
+      video_urls: videoUrls,
+      bestseller: body.bestseller === true || body.bestseller === "true",
     };
 
     const { error: insertError } = await supabase.from("products").insert(payload);

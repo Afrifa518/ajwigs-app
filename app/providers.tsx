@@ -28,6 +28,7 @@ export type Product = {
   colors: string[];
   bestseller: boolean;
   image: string[];
+  video: string[];
   date: number;
 };
 

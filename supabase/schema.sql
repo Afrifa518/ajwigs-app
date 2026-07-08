@@ -50,9 +50,14 @@ create table if not exists public.products (
   sizes text[] not null default '{}',
   colors text[] not null default '{}',
   image_urls text[] not null default '{}',
+  video_urls text[] not null default '{}',
   bestseller boolean not null default false,
   created_at timestamptz not null default now()
 );
+
+-- Additive migration for databases created before product videos existed.
+alter table public.products
+  add column if not exists video_urls text[] not null default '{}';
 
 alter table public.products enable row level security;
 

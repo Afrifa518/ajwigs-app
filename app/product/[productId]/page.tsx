@@ -24,9 +24,24 @@ export default function ProductPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [product, setProduct] = useState<Product | null>(null);
-  const [image, setImage] = useState<string | null>(null);
+  const [active, setActive] = useState<{ type: "image" | "video"; url: string } | null>(null);
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [selectedSize, setSelectedSize] = useState<string>("");
+
+  const media = useMemo(() => {
+    if (!product) return [] as { type: "image" | "video"; url: string }[];
+    return [
+      ...product.image.map((url) => ({ type: "image" as const, url })),
+      ...(product.video ?? []).map((url) => ({ type: "video" as const, url })),
+    ];
+  }, [product]);
+
+  const firstMedia = (p: Product): { type: "image" | "video"; url: string } | null =>
+    p.image?.[0]
+      ? { type: "image", url: p.image[0] }
+      : p.video?.[0]
+      ? { type: "video", url: p.video[0] }
+      : null;
 
   const isLegacyProduct = !!product && product.sizes.length === 0;
   const availableColors = useMemo(() => {
@@ -49,7 +64,7 @@ export default function ProductPage() {
 
     if (productFromList) {
       setProduct(productFromList);
-      setImage(productFromList.image?.[0] ?? null);
+      setActive(firstMedia(productFromList));
       return;
     }
 
@@ -70,7 +85,7 @@ export default function ProductPage() {
         }
 
         setProduct(data.product);
-        setImage(data.product.image?.[0] ?? null);
+        setActive(firstMedia(data.product));
       } catch (err) {
         console.error(err);
         setError("Failed to load product");
@@ -141,29 +156,58 @@ export default function ProductPage() {
           <div className="flex flex-col gap-8 sm:gap-12 lg:flex-row">
             <div className="flex flex-col-reverse flex-1 gap-3 sm:flex-row">
               <div className="flex w-full gap-2 overflow-x-auto pb-2 sm:w-24 sm:flex-col sm:gap-3 sm:overflow-y-auto sm:pb-0">
-                {product.image.map((item, index) => (
-                  <Image
-                    onClick={() => setImage(item)}
-                    src={item}
-                    key={index}
-                    className="h-auto w-24 shrink-0 cursor-pointer border border-gray-200 sm:w-full"
-                    alt=""
-                    width={200}
-                    height={200}
-                  />
-                ))}
+                {media.map((m, index) => {
+                  const isActive = active?.url === m.url;
+                  return (
+                    <button
+                      type="button"
+                      key={index}
+                      onClick={() => setActive(m)}
+                      className={`relative w-24 shrink-0 cursor-pointer overflow-hidden border transition-colors sm:w-full ${
+                        isActive ? "border-black" : "border-gray-200 hover:border-gray-400"
+                      }`}
+                      aria-label={m.type === "video" ? `Play video ${index + 1}` : `View image ${index + 1}`}
+                    >
+                      {m.type === "image" ? (
+                        <Image src={m.url} className="h-auto w-full" alt="" width={200} height={200} />
+                      ) : (
+                        <>
+                          <video src={m.url} className="aspect-square w-full object-cover" muted playsInline preload="metadata" />
+                          <span className="pointer-events-none absolute inset-0 grid place-items-center">
+                            <span className="grid h-7 w-7 place-items-center rounded-full bg-black/55 text-white">
+                              <svg viewBox="0 0 24 24" fill="currentColor" className="ml-0.5 h-3.5 w-3.5">
+                                <path d="M8 5v14l11-7z" />
+                              </svg>
+                            </span>
+                          </span>
+                        </>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
               <div className="w-full sm:flex-1">
-                {image ? (
-                  <Image
-                    className="h-auto w-full border border-gray-200"
-                    src={image}
-                    alt=""
-                    width={900}
-                    height={900}
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 40vw"
-                    priority
-                  />
+                {active ? (
+                  active.type === "image" ? (
+                    <Image
+                      className="h-auto w-full border border-gray-200"
+                      src={active.url}
+                      alt=""
+                      width={900}
+                      height={900}
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 40vw"
+                      priority
+                    />
+                  ) : (
+                    <video
+                      key={active.url}
+                      className="h-auto w-full border border-gray-200 bg-black"
+                      src={active.url}
+                      controls
+                      playsInline
+                      preload="metadata"
+                    />
+                  )
                 ) : null}
               </div>
             </div>
