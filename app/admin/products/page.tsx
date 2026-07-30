@@ -31,7 +31,7 @@ type BasicResponse = {
   message?: string;
 };
 
-const MAX_IMAGE_BYTES = 15 * 1024 * 1024; // 15 MB per photo
+const MAX_IMAGE_BYTES = 40 * 1024 * 1024; // 40 MB per photo (auto-compressed before upload)
 const MAX_VIDEO_BYTES = 50 * 1024 * 1024; // 50 MB per video
 const STORAGE_BUCKET = "product-images";
 
@@ -46,6 +46,37 @@ const formatBytes = (bytes: number) => {
   if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
+
+// Downscale/re-encode large photos in the browser before upload. Phone photos
+// (and HEIC) are often 5-15 MB; shrinking them to <=2000px JPEG keeps uploads
+// fast, well under storage limits, and fixes HEIC display. Falls back to the
+// original file if the browser can't decode it, so nothing ever breaks here.
+async function compressImage(file: File): Promise<File> {
+  if (!file.type.startsWith("image/")) return file;
+  try {
+    const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+    const maxDim = 2000;
+    const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
+    const w = Math.max(1, Math.round(bitmap.width * scale));
+    const h = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", 0.82)
+    );
+    bitmap.close?.();
+    if (!blob) return file;
+    if (scale === 1 && blob.size >= file.size) return file; // no real gain
+    const name = file.name.replace(/\.[^.]+$/, "") + ".jpg";
+    return new File([blob], name, { type: "image/jpeg", lastModified: Date.now() });
+  } catch {
+    return file;
+  }
+}
 
 // A single selected file, shown as a live local preview before upload.
 function MediaTile({
@@ -300,7 +331,7 @@ export default function AdminProductsPage() {
         continue;
       }
       if (f.size > MAX_IMAGE_BYTES) {
-        setError(`"${f.name}" is over 15 MB and was skipped.`);
+        setError(`"${f.name}" is over 40 MB and was skipped.`);
         continue;
       }
       valid.push(f);
@@ -361,7 +392,16 @@ export default function AdminProductsPage() {
           .from(STORAGE_BUCKET)
           .upload(path, file, { contentType: file.type, upsert: false });
 
-        if (upErr) throw new Error(upErr.message);
+        if (upErr) {
+          const m = (upErr.message || "").toLowerCase();
+          if (m.includes("exceeded") || m.includes("maximum allowed size") || m.includes("too large") || m.includes("413"))
+            throw new Error(`"${file.name}" is too large to upload — try a smaller file (long videos are the usual cause).`);
+          if (m.includes("row-level security") || m.includes("permission") || m.includes("not authorized") || m.includes("unauthorized"))
+            throw new Error("Upload was blocked — please sign out, sign back in, and try again.");
+          if (m.includes("quota") || m.includes("exceeded the storage") || (m.includes("storage") && m.includes("full")))
+            throw new Error("Storage is full on the current plan — old media needs removing or the plan upgrading.");
+          throw new Error(`Couldn't upload "${file.name}": ${upErr.message}`);
+        }
 
         const { data } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path);
         if (!data.publicUrl) throw new Error("Could not generate a public URL for an upload.");
@@ -372,7 +412,7 @@ export default function AdminProductsPage() {
       };
 
       const imageUrls: string[] = [];
-      for (const file of images) imageUrls.push(await uploadOne(file));
+      for (const file of images) imageUrls.push(await uploadOne(await compressImage(file)));
 
       const videoUrls: string[] = [];
       for (const file of videos) videoUrls.push(await uploadOne(file));
