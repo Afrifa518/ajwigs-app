@@ -32,8 +32,8 @@ export default function Craftsmanship() {
             <div className="overflow-hidden rounded-[1.6rem] border border-[#C8A951]/25 shadow-[0_40px_120px_-40px_rgba(0,0,0,0.8)]">
               <Parallax strength={26}>
                 <Image
-                  src={assets.about_img}
-                  alt="Close-up of an El-ROI lace-front wig showing the transparent lace and natural parting"
+                  src={assets.craft_img}
+                  alt="An El-ROI body-wave lace-front unit on a mannequin, showing the transparent lace and natural parting"
                   className="h-full w-full scale-[1.07] object-cover"
                 />
               </Parallax>

@@ -12,6 +12,7 @@ import star_icon from "@/frontend/src/assets/star_icon.png";
 import support_img from "@/frontend/src/assets/support_img.png";
 import menu_icon from "@/frontend/src/assets/menu_icon.png";
 import about_img from "@/frontend/src/assets/new.jpg";
+import craft_img from "@/frontend/src/assets/craft-hero.jpg";
 import contact_img from "@/frontend/src/assets/contact_img.png";
 import stripe_logo from "@/frontend/src/assets/stripe_logo.png";
 import cross_icon from "@/frontend/src/assets/cross_icon.png";
@@ -31,6 +32,7 @@ export const assets = {
   support_img,
   menu_icon,
   about_img,
+  craft_img,
   contact_img,
   stripe_logo,
   cross_icon,
