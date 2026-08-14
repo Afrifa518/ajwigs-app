@@ -27,7 +27,7 @@ const SIGNALS = [
   { k: "Order on WhatsApp", v: "Real people, quick replies" },
   { k: "24-hour dispatch", v: "From the UK, nationwide" },
   { k: "Pay on delivery", v: "Or secure card checkout" },
-  { k: "Easy 7-day returns", v: "Shop with confidence" },
+  { k: "Easy 24-hour returns", v: "Shop with confidence" },
 ];
 
 const IconStar = () => (

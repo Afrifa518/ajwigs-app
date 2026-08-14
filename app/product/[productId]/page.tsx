@@ -286,7 +286,7 @@ export default function ProductPage() {
               <div className="flex flex-col gap-1 mt-5 text-sm text-gray-500">
                 <p>100% Quality Wig.</p>
                 <p>Cash on delivery is available on this product.</p>
-                <p>Easy return and exchange policy within 7 days.</p>
+                <p>Easy return and exchange policy within 24 hours.</p>
               </div>
             </div>
           </div>
