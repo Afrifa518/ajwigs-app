@@ -12,6 +12,7 @@ export const PRODUCT_CATEGORIES: CatalogOption[] = [
   { value: "Frontal", label: "Frontal" },
   { value: "Closure", label: "Closure" },
   { value: "Straight", label: "Straight Wig" },
+  { value: "Medical Wigs", label: "Medical Wigs" },
 ];
 
 export const PRODUCT_SUBCATEGORY_GROUPS: CatalogGroup[] = [
@@ -46,6 +47,15 @@ export const PRODUCT_SUBCATEGORY_GROUPS: CatalogGroup[] = [
       { value: "Extra Long", label: "Extra Long (24-26 inches)" },
       { value: "Ultra Long", label: "Ultra Long (26-30 inches)" },
       { value: "Specialty", label: "Specialty (30-36 inches)" },
+    ],
+  },
+  {
+    label: "Medical Cap Type",
+    options: [
+      { value: "Silk Top", label: "Silk Top" },
+      { value: "Monofilament", label: "Monofilament Top" },
+      { value: "Full Lace Cap", label: "Full Lace Cap" },
+      { value: "Vacuum Cap", label: "Vacuum / Suction Cap" },
     ],
   },
 ];
