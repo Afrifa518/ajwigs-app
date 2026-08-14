@@ -50,8 +50,8 @@ export default function MedicalCare() {
           <div>
             <h3 className="prata-regular text-xl text-[#1c1714]">Free, private consultation</h3>
             <p className="mt-1.5 max-w-lg text-[14px] leading-relaxed text-[#4b4339]">
-              Not sure which cap or fit is right? We'll guide you gently through every option —
-              no pressure, complete discretion, whenever you're ready.
+              Not sure which cap or fit is right? We&rsquo;ll guide you gently through every
+              option — no pressure, complete discretion, whenever you&rsquo;re ready.
             </p>
           </div>
           <a
