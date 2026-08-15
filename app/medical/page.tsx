@@ -20,10 +20,10 @@ const WHO = [
 ];
 
 const CAP_TYPES = [
-  { name: "Silk Top", body: "Hair is knotted under a fine silk layer so it looks like it grows from the scalp — the most natural parting.", best: "A realistic part" },
-  { name: "Monofilament", body: "A soft, breathable mesh crown that's gentle on a tender scalp and lets hair be parted in any direction.", best: "Sensitive scalps" },
-  { name: "Full Lace", body: "Sheer lace across the whole cap — style it up, back or to either side with an undetectable hairline all round.", best: "Styling freedom" },
-  { name: "Vacuum / Suction", body: "A custom-moulded silicone cap that holds securely to a smooth, hair-free scalp by suction — no glue, no tape.", best: "Total hair loss" },
+  { name: "Silk Top", img: assets.medical_silk, body: "Hair is knotted under a fine silk layer so it looks like it grows from the scalp — the most natural parting.", best: "A realistic part" },
+  { name: "Monofilament", img: assets.medical_curls, body: "A soft, breathable mesh crown that's gentle on a tender scalp and lets hair be parted in any direction.", best: "Sensitive scalps" },
+  { name: "Full Lace", img: assets.medical_lace, body: "Sheer lace across the whole cap — style it up, back or to either side with an undetectable hairline all round.", best: "Styling freedom" },
+  { name: "Vacuum / Suction", img: assets.medical_vacuum, body: "A custom-moulded silicone cap that holds securely to a smooth, hair-free scalp by suction — no glue, no tape.", best: "Total hair loss" },
 ];
 
 const STEPS = [
@@ -124,12 +124,23 @@ export default function MedicalPage() {
         </p>
         <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {CAP_TYPES.map((c) => (
-            <div key={c.name} className="flex flex-col rounded-2xl border border-[#1c1714]/10 bg-white/50 p-6">
-              <h3 className="prata-regular text-xl text-[#1c1714]">{c.name}</h3>
-              <p className="mt-2.5 flex-1 text-[13.5px] leading-relaxed text-[#4b4339]">{c.body}</p>
-              <span className="mt-4 inline-flex w-fit rounded-full border border-[#C8A951]/40 bg-[#C8A951]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-[#8a6a1f]">
-                Best for: {c.best}
-              </span>
+            <div key={c.name} className="flex flex-col overflow-hidden rounded-2xl border border-[#1c1714]/10 bg-white/50">
+              <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#efe7d2]">
+                <Image
+                  src={c.img}
+                  alt={`${c.name} medical wig on a natural black-haired model`}
+                  fill
+                  className="object-cover object-top"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 22vw"
+                />
+              </div>
+              <div className="flex flex-1 flex-col p-6">
+                <h3 className="prata-regular text-xl text-[#1c1714]">{c.name}</h3>
+                <p className="mt-2.5 flex-1 text-[13.5px] leading-relaxed text-[#4b4339]">{c.body}</p>
+                <span className="mt-4 inline-flex w-fit rounded-full border border-[#C8A951]/40 bg-[#C8A951]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-[#8a6a1f]">
+                  Best for: {c.best}
+                </span>
+              </div>
             </div>
           ))}
         </div>

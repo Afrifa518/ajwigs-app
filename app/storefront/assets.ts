@@ -18,6 +18,8 @@ import stripe_logo from "@/frontend/src/assets/stripe_logo.png";
 import cross_icon from "@/frontend/src/assets/cross_icon.png";
 import medical_silk from "@/frontend/src/assets/medical-silk.jpg";
 import medical_curls from "@/frontend/src/assets/medical-curls.jpg";
+import medical_lace from "@/frontend/src/assets/medical-lace.jpg";
+import medical_vacuum from "@/frontend/src/assets/medical-vacuum.jpg";
 
 export const assets = {
   logo,
@@ -40,4 +42,6 @@ export const assets = {
   cross_icon,
   medical_silk,
   medical_curls,
+  medical_lace,
+  medical_vacuum,
 };
