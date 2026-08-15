@@ -20,6 +20,10 @@ import medical_silk from "@/frontend/src/assets/medical-silk.jpg";
 import medical_curls from "@/frontend/src/assets/medical-curls.jpg";
 import medical_lace from "@/frontend/src/assets/medical-lace.jpg";
 import medical_vacuum from "@/frontend/src/assets/medical-vacuum.jpg";
+import cap_silk from "@/frontend/src/assets/cap-silk.png";
+import cap_mono from "@/frontend/src/assets/cap-mono.png";
+import cap_lace from "@/frontend/src/assets/cap-lace.png";
+import cap_vacuum from "@/frontend/src/assets/cap-vacuum.png";
 
 export const assets = {
   logo,
@@ -44,4 +48,8 @@ export const assets = {
   medical_curls,
   medical_lace,
   medical_vacuum,
+  cap_silk,
+  cap_mono,
+  cap_lace,
+  cap_vacuum,
 };

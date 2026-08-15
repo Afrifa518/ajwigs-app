@@ -20,10 +20,10 @@ const WHO = [
 ];
 
 const CAP_TYPES = [
-  { name: "Silk Top", img: assets.medical_silk, body: "Hair is knotted under a fine silk layer so it looks like it grows from the scalp — the most natural parting.", best: "A realistic part" },
-  { name: "Monofilament", img: assets.medical_curls, body: "A soft, breathable mesh crown that's gentle on a tender scalp and lets hair be parted in any direction.", best: "Sensitive scalps" },
-  { name: "Full Lace", img: assets.medical_lace, body: "Sheer lace across the whole cap — style it up, back or to either side with an undetectable hairline all round.", best: "Styling freedom" },
-  { name: "Vacuum / Suction", img: assets.medical_vacuum, body: "A custom-moulded silicone cap that holds securely to a smooth, hair-free scalp by suction — no glue, no tape.", best: "Total hair loss" },
+  { name: "Silk Top", img: assets.cap_silk, body: "Hair is knotted under a fine silk layer so it looks like it grows from the scalp — the most natural parting.", best: "A realistic part" },
+  { name: "Monofilament", img: assets.cap_mono, body: "A soft, breathable mesh crown that's gentle on a tender scalp and lets hair be parted in any direction.", best: "Sensitive scalps" },
+  { name: "Full Lace", img: assets.cap_lace, body: "Sheer lace across the whole cap — style it up, back or to either side with an undetectable hairline all round.", best: "Styling freedom" },
+  { name: "Vacuum / Suction", img: assets.cap_vacuum, body: "A custom-moulded silicone cap that holds securely to a smooth, hair-free scalp by suction — no glue, no tape.", best: "Total hair loss" },
 ];
 
 const STEPS = [
@@ -128,9 +128,9 @@ export default function MedicalPage() {
               <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#efe7d2]">
                 <Image
                   src={c.img}
-                  alt={`${c.name} medical wig on a natural black-haired model`}
+                  alt={`${c.name} wig cap construction diagram`}
                   fill
-                  className="object-cover object-top"
+                  className="object-contain"
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 22vw"
                 />
               </div>
