@@ -1,5 +1,7 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
+import { assets } from "@/app/storefront/assets";
 import { buildWhatsappLink } from "@/lib/whatsapp";
 
 export const metadata: Metadata = {
@@ -39,6 +41,8 @@ export default function MedicalPage() {
     <div className="py-14 sm:py-20">
       {/* Hero */}
       <section className="border-t border-[#1c1714]/10 pt-12">
+        <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
+        <div>
         <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#6b5a32]">
           Medical &amp; Comfort Wigs
         </p>
@@ -72,6 +76,17 @@ export default function MedicalPage() {
           >
             Browse the collection
           </Link>
+        </div>
+        </div>
+          <div className="relative">
+            <Image
+              src={assets.medical_silk}
+              alt="A woman wearing a natural, comfortable medical wig with a realistic parting"
+              className="h-auto w-full rounded-3xl object-cover ring-1 ring-[#C8A951]/20"
+              sizes="(max-width: 1024px) 100vw, 45vw"
+              priority
+            />
+          </div>
         </div>
       </section>
 
@@ -117,6 +132,28 @@ export default function MedicalPage() {
               </span>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Reassurance with photo */}
+      <section className="mt-16 sm:mt-24">
+        <div className="grid items-center gap-8 sm:gap-12 lg:grid-cols-2">
+          <Image
+            src={assets.medical_curls}
+            alt="A woman smiling warmly, wearing a natural curly wig"
+            className="h-auto w-full rounded-3xl object-cover ring-1 ring-[#C8A951]/20"
+            sizes="(max-width: 1024px) 100vw, 45vw"
+          />
+          <div>
+            <h2 className="prata-regular text-[clamp(1.6rem,3.5vw,2.4rem)] leading-tight text-[#1c1714]">
+              You, still you.
+            </h2>
+            <p className="mt-4 max-w-md text-[15px] leading-relaxed text-[#4b4339]">
+              Our medical wigs are made from soft, real human hair on breathable, comfort-first caps
+              — so what you see in the mirror feels like home. Wear it to work, to appointments, to
+              celebrations, with total confidence.
+            </p>
+          </div>
         </div>
       </section>
 

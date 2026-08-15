@@ -16,6 +16,8 @@ import craft_img from "@/frontend/src/assets/craft-hero.jpg";
 import contact_img from "@/frontend/src/assets/contact_img.png";
 import stripe_logo from "@/frontend/src/assets/stripe_logo.png";
 import cross_icon from "@/frontend/src/assets/cross_icon.png";
+import medical_silk from "@/frontend/src/assets/medical-silk.jpg";
+import medical_curls from "@/frontend/src/assets/medical-curls.jpg";
 
 export const assets = {
   logo,
@@ -36,4 +38,6 @@ export const assets = {
   contact_img,
   stripe_logo,
   cross_icon,
+  medical_silk,
+  medical_curls,
 };
