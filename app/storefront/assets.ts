@@ -20,10 +20,10 @@ import medical_silk from "@/frontend/src/assets/medical-silk.jpg";
 import medical_curls from "@/frontend/src/assets/medical-curls.jpg";
 import medical_lace from "@/frontend/src/assets/medical-lace.jpg";
 import medical_vacuum from "@/frontend/src/assets/medical-vacuum.jpg";
-import cap_silk from "@/frontend/src/assets/cap-silk.png";
-import cap_mono from "@/frontend/src/assets/cap-mono.png";
-import cap_lace from "@/frontend/src/assets/cap-lace.png";
-import cap_vacuum from "@/frontend/src/assets/cap-vacuum.png";
+import cap_silk from "@/frontend/src/assets/cap-silk.jpg";
+import cap_mono from "@/frontend/src/assets/cap-mono.jpg";
+import cap_lace from "@/frontend/src/assets/cap-lace.jpg";
+import cap_vacuum from "@/frontend/src/assets/cap-vacuum.jpg";
 
 export const assets = {
   logo,

@@ -128,9 +128,9 @@ export default function MedicalPage() {
               <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#efe7d2]">
                 <Image
                   src={c.img}
-                  alt={`${c.name} wig cap construction diagram`}
+                  alt={`${c.name} wig cap shown on a mannequin`}
                   fill
-                  className="object-contain"
+                  className="object-cover"
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 22vw"
                 />
               </div>
